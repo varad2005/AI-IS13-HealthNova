@@ -1,7 +1,8 @@
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, send_from_directory
 from models import db, User, PatientProfile, Visit, LabTest, Prescription
 from auth.decorators import role_required
 from datetime import datetime
+import os
 from utils.medical_history import (
     get_patient_timeline, 
     get_patient_summary, 
@@ -11,6 +12,40 @@ from utils.medical_history import (
 )
 
 doctor_bp = Blueprint('doctor', __name__)
+
+
+# ============================================================================
+# SECURITY: Protected Doctor Chatbot Page
+# ============================================================================
+# This route serves the doctor chatbot HTML through Flask's session-based auth.
+# 
+# WHY THIS APPROACH?
+# - Direct HTML access bypasses Flask session validation
+# - Opening doctor-chatbot.html directly has no session context
+# - Browser doesn't send session cookies to file:// URLs
+# - Session-based auth REQUIRES requests to go through Flask server
+#
+# SECURITY BENEFITS:
+# 1. @role_required('doctor') enforces session validation at server level
+# 2. Returns 403 if non-doctor tries to access (fail-fast)
+# 3. Returns 401 if not logged in (authentication required)
+# 4. Session cookies automatically included in same-origin requests
+# 5. No direct file access = no session bypass vulnerability
+#
+# HACKATHON-SAFE: Simple, works with existing session infrastructure
+# ============================================================================
+@doctor_bp.route('/chatbot', methods=['GET'])
+@role_required('doctor')
+def doctor_chatbot_page():
+    """
+    Serve doctor chatbot page with session-based authentication.
+    Only accessible to logged-in doctors.
+    """
+    # If we reach here, user is authenticated as doctor (decorator validates)
+    # Serve the HTML file from frontend/doctor directory
+    # Path: backend/doctor/routes.py -> .. -> backend/ -> .. -> root/ -> frontend/doctor/
+    frontend_path = os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'doctor')
+    return send_from_directory(frontend_path, 'doctor-chatbot.html')
 
 
 @doctor_bp.route('/dashboard', methods=['GET'])

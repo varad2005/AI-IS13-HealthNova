@@ -786,8 +786,11 @@
                     return;
                 }
 
-                const data = await response.json();
-                if (data.role !== 'doctor') {
+                const result = await response.json();
+                
+                // Check if authenticated and has correct role
+                // Response structure: { status: "success", authenticated: true, data: { role: "doctor" } }
+                if (!result.authenticated || result.data?.role !== 'doctor') {
                     alert('Access denied. This feature is for doctors only.');
                     window.location.href = '/login.html';
                 }

@@ -118,7 +118,20 @@ def login():
             'message': 'Account is inactive. Please contact support'
         }), 403
     
-    # Set session data
+    # ========================================================================
+    # SESSION-BASED AUTHENTICATION
+    # ========================================================================
+    # Set session data for authentication
+    # - session['user_id']: User ID for identifying the logged-in user
+    # - session['role']: User role ('doctor', 'patient', 'lab') for RBAC
+    # - session['full_name']: Display name for UI
+    #
+    # Session cookies are automatically sent by browser on subsequent requests
+    # to the same origin (domain + port), enabling server-side validation
+    # via @login_required and @role_required decorators.
+    #
+    # SECURITY: Sessions are server-side, stored in Flask session (secure cookie)
+    # ========================================================================
     session.permanent = True
     session['user_id'] = user.id
     session['role'] = user.role

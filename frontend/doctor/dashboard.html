@@ -117,7 +117,10 @@
                 Health Nova
             </a>
             <div class="ms-auto d-flex align-items-center gap-3">
-                <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window.location.href='doctor-chatbot.html'">
+                <!-- SECURITY FIX: Use Flask route instead of direct HTML -->
+                <!-- Direct HTML access bypasses session authentication -->
+                <!-- Flask route /doctor/chatbot validates session and role -->
+                <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window.location.href='/doctor/chatbot'">
                     <i class="bi bi-robot"></i> Clinical Assistant
                 </button>
                 <div class="me-3 d-none d-md-block">

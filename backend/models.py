@@ -340,3 +340,106 @@ class Appointment(db.Model):
             data['doctor_phone'] = self.doctor.phone_number if self.doctor else None
         
         return data
+
+
+class VideoMeeting(db.Model):
+    """
+    Video consultation meeting state management.
+    
+    Why separate from Appointment?
+    - Not all appointments need video (some are in-person)
+    - Meetings can be created ad-hoc without appointments
+    - Cleaner state management for video lifecycle
+    """
+    __tablename__ = 'video_meetings'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=True)
+    
+    # Meeting lifecycle
+    status = db.Column(db.String(20), default='SCHEDULED')  # SCHEDULED, ACTIVE, ENDED, CANCELLED
+    scheduled_at = db.Column(db.DateTime, default=datetime.utcnow)
+    started_at = db.Column(db.DateTime, nullable=True)
+    ended_at = db.Column(db.DateTime, nullable=True)
+    
+    # Metadata
+    duration_seconds = db.Column(db.Integer, nullable=True)  # Calculated from started_at to ended_at
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    doctor = db.relationship('User', foreign_keys=[doctor_id])
+    patient = db.relationship('User', foreign_keys=[patient_id])
+    appointment = db.relationship('Appointment', foreign_keys=[appointment_id])
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'room_id': self.room_id,
+            'doctor_id': self.doctor_id,
+            'patient_id': self.patient_id,
+            'appointment_id': self.appointment_id,
+            'status': self.status,
+            'scheduled_at': self.scheduled_at.isoformat() if self.scheduled_at else None,
+            'started_at': self.started_at.isoformat() if self.started_at else None,
+            'ended_at': self.ended_at.isoformat() if self.ended_at else None,
+            'duration_seconds': self.duration_seconds,
+            'created_at': self.created_at.isoformat()
+        }
+
+
+class Payment(db.Model):
+    """
+    Payment transaction records with idempotency.
+    
+    Why separate table?
+    - Audit trail for financial transactions
+    - Support multiple payment methods (Razorpay, UPI, cash)
+    - Idempotency enforcement via unique constraints
+    """
+    __tablename__ = 'payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Razorpay details
+    razorpay_order_id = db.Column(db.String(100), nullable=False, index=True)
+    razorpay_payment_id = db.Column(db.String(100), unique=True, nullable=False, index=True)  # Idempotency key
+    
+    # Payment details
+    amount = db.Column(db.Integer, nullable=False)  # Amount in paise (smallest currency unit)
+    currency = db.Column(db.String(10), default='INR')
+    status = db.Column(db.String(20), default='PENDING')  # PENDING, PAID, FAILED, REFUNDED
+    
+    # Linked entity (appointment, lab test, etc.)
+    entity_type = db.Column(db.String(50), nullable=True)  # 'appointment', 'lab_test', 'subscription'
+    entity_id = db.Column(db.Integer, nullable=True)
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    failed_at = db.Column(db.DateTime, nullable=True)
+    refunded_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    user = db.relationship('User', backref='payments')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'razorpay_order_id': self.razorpay_order_id,
+            'razorpay_payment_id': self.razorpay_payment_id,
+            'amount': self.amount,
+            'currency': self.currency,
+            'status': self.status,
+            'entity_type': self.entity_type,
+            'entity_id': self.entity_id,
+            'created_at': self.created_at.isoformat(),
+            'paid_at': self.paid_at.isoformat() if self.paid_at else None,
+            'failed_at': self.failed_at.isoformat() if self.failed_at else None,
+            'refunded_at': self.refunded_at.isoformat() if self.refunded_at else None
+        }
