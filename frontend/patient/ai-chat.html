@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Assistant - Health Nova</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #f8f9fa;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .chat-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 100%;
+            margin: 0 auto;
+            background: #f8f9fa;
+        }
+
+        .chat-header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .chat-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .ai-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 2px 8px rgba(30,136,229,0.3);
+        }
+
+        .brand-name {
+            color: #1e88e5;
+            font-weight: 700;
+            font-size: 1.3rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #1e88e5;
+            border-radius: 4px;
+        }
+
+        .message {
+            display: flex;
+            margin-bottom: 25px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .message.ai .message-avatar {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            margin-right: 12px;
+        }
+
+        .message.user .message-avatar {
+            background: #e3f2fd;
+            color: #1e88e5;
+            margin-left: 12px;
+        }
+
+        .message-wrapper {
+            display: flex;
+            align-items: flex-end;
+            max-width: 70%;
+        }
+
+        .message.user .message-wrapper {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            padding: 15px 20px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.ai .message-content {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-bottom-left-radius: 4px;
+            color: #333;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(30,136,229,0.3);
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .message-text ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1e88e5;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-8px);
+            }
+        }
+
+        .chat-input-container {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+            border-top: 1px solid #e9ecef;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .quick-action-btn {
+            padding: 8px 16px;
+            background: #e3f2fd;
+            border: 1px solid #1e88e5;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #1e88e5;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .quick-action-btn:hover {
+            background: #1e88e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30,136,229,0.3);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e3f2fd;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .chat-input:focus {
+            border-color: #1e88e5;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(30,136,229,0.1);
+        }
+
+        .send-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(30,136,229,0.3);
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(30,136,229,0.5);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .back-btn {
+            background: white;
+            color: #1e88e5;
+            border: 2px solid #1e88e5;
+            padding: 10px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .back-btn:hover {
+            background: #1e88e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(30,136,229,0.3);
+        }
+
+        .ai-badge {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin: 10px 30px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message.active {
+            display: flex;
+        }
+
+        @media (max-width: 768px) {
+            .chat-header {
+                padding: 15px 20px;
+            }
+            
+            .chat-messages {
+                padding: 20px 15px;
+            }
+            
+            .chat-input-container {
+                padding: 15px 20px;
+            }
+            
+            .message-wrapper {
+                max-width: 85%;
+            }
+            
+            .brand-name {
+                font-size: 1.1rem;
+            }
+            
+            .quick-actions {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">
+                <div class="ai-avatar">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div>
+                    <div>
+                        <span class="brand-name">Health Nova AI</span>
+                        <span class="ai-badge">Powered by Gemini</span>
+                    </div>
+                    <small class="text-muted">
+                        <span class="status-indicator"></span>
+                        Online • Instant responses
+                    </small>
+                </div>
+            </div>
+            <button class="back-btn" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-arrow-left me-2"></i>Back
+            </button>
+        </div>
+
+        <div class="error-message" id="errorMessage">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span id="errorText">Connection error. Please try again.</span>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message ai">
+                <div class="message-wrapper">
+                    <div class="message-avatar">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">👋 Hello! I'm Health Nova AI Assistant, powered by Google Gemini.
+
+I can help you with:
+• Understanding symptoms and conditions
+• General health advice and wellness tips
+• Medication information
+• Booking appointments
+• Emergency guidance
+• Health checkup recommendations
+
+How can I assist you today?</div>
+                        <span class="message-time">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sendQuickMessage('I have fever and headache. What should I do?')">
+                    <i class="bi bi-thermometer me-1"></i> Fever symptoms
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('How can I book an appointment with a doctor?')">
+                    <i class="bi bi-calendar me-1"></i> Book appointment
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Give me daily health tips')">
+                    <i class="bi bi-heart me-1"></i> Health tips
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('What to do in a medical emergency?')">
+                    <i class="bi bi-exclamation-triangle me-1"></i> Emergency
+                </button>
+                <button class="quick-action-btn" onclick="sendQuickMessage('Preventive health checkup packages')">
+                    <i class="bi bi-clipboard2-pulse me-1"></i> Health checkup
+                </button>
+            </div>
+            
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="messageInput" 
+                    placeholder="Ask me anything about your health..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="typing-indicator" id="typingIndicator">
+        <div class="message-avatar" style="background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%); color: white;">
+            <i class="bi bi-robot"></i>
+        </div>
+        <div class="typing-dots">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function addMessage(text, isUser = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const avatar = isUser 
+                ? '<i class="bi bi-person"></i>'
+                : '<i class="bi bi-robot"></i>';
+            
+            messageDiv.innerHTML = `
+                <div class="message-wrapper">
+                    <div class="message-avatar">
+                        ${avatar}
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">${text}</div>
+                        <span class="message-time">${getCurrentTime()}</span>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            const messagesContainer = document.getElementById('chatMessages');
+            indicator.classList.add('active');
+            messagesContainer.appendChild(indicator);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            indicator.classList.remove('active');
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.add('active');
+            
+            setTimeout(() => {
+                errorDiv.classList.remove('active');
+            }, 5000);
+        }
+
+        async function getGeminiResponse(userMessage) {
+            try {
+                // Call backend API instead of direct Gemini API
+                const response = await fetch('/patient/ai-chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: userMessage
+                    }),
+                    credentials: 'include' // Include session cookies
+                });
+
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+
+                const data = await response.json();
+                
+                if (data.status === 'success' || data.status === 'fallback') {
+                    return data.message;
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                
+            } catch (error) {
+                console.error('AI Chat Error:', error);
+                showError('Unable to connect to AI service. Using fallback responses.');
+                return getFallbackResponse(userMessage);
+            }
+        }
+
+        function getFallbackResponse(message) {
+            const lowerMessage = message.toLowerCase();
+            
+            // Fallback responses when API is not available
+            if (lowerMessage.includes('fever') || lowerMessage.includes('temperature')) {
+                return `🌡️ **Fever Management:**
+
+Common fever symptoms:
+• Body temperature above 100.4°F (38°C)
+• Chills and shivering
+• Headache and body aches
+• Fatigue and weakness
+
+**What you can do:**
+✓ Rest and stay hydrated
+✓ Take fever-reducing medication (paracetamol)
+✓ Use cool compresses
+✓ Monitor temperature regularly
+
+⚠️ **See a doctor if:**
+• Fever exceeds 103°F (39.4°C)
+• Lasts more than 3 days
+• Accompanied by severe symptoms
+
+Would you like to book an appointment with a doctor?`;
+                
+            } else if (lowerMessage.includes('appointment') || lowerMessage.includes('book')) {
+                return `📅 **Book Your Appointment:**
+
+I can help you schedule a consultation:
+
+**Available Options:**
+1️⃣ **Video Consultation** - Available 24/7
+2️⃣ **In-Person Visit** - Next available slot: Tomorrow
+3️⃣ **Specialist Consultation** - Based on your needs
+
+**How to book:**
+• Click on "Book Consultation" from your dashboard
+• Select your preferred doctor and time slot
+• Complete the booking
+
+💡 Average consultation fee: ₹400-800
+
+Would you like me to guide you through the booking process?`;
+                
+            } else if (lowerMessage.includes('health tip') || lowerMessage.includes('wellness')) {
+                return `💪 **Daily Health & Wellness Tips:**
+
+🏃‍♂️ **Stay Active**
+• 30 minutes of moderate exercise daily
+• Walking, yoga, or home workouts
+
+💧 **Hydration**
+• Drink 8-10 glasses of water daily
+• Limit sugary drinks
+
+🥗 **Balanced Diet**
+• Include fruits, vegetables, whole grains
+• Reduce processed foods and sugar
+
+😴 **Quality Sleep**
+• 7-8 hours of sleep per night
+• Maintain consistent sleep schedule
+
+🧘‍♀️ **Stress Management**
+• Practice meditation or deep breathing
+• Take breaks during work
+
+📊 **Regular Checkups**
+• Annual health screenings
+• Monitor blood pressure and blood sugar
+
+Which area would you like more specific advice on?`;
+                
+            } else if (lowerMessage.includes('emergency') || lowerMessage.includes('urgent')) {
+                return `🚨 **EMERGENCY GUIDANCE:**
+
+**For Immediate Medical Emergency:**
+📞 **Call: 108** (Ambulance - India)
+📞 **Emergency: 102**
+
+**Warning Signs - Call Immediately:**
+• Chest pain or pressure
+• Difficulty breathing
+• Severe bleeding
+• Loss of consciousness
+• Severe head injury
+• Suspected stroke (face drooping, arm weakness, speech difficulty)
+• Severe allergic reaction
+
+**Health Nova Emergency:**
+📍 **Nearest Facility:** Health Nova Medical Center
+🚗 **Distance:** 2.3 km
+⏰ **24/7 Emergency Services**
+
+For non-life-threatening issues, you can:
+• Book an urgent video consultation
+• Visit walk-in clinic
+
+Are you currently experiencing a medical emergency?`;
+                
+            } else if (lowerMessage.includes('checkup') || lowerMessage.includes('package')) {
+                return `🏥 **Health Checkup Packages:**
+
+**Basic Screening - ₹999**
+• Complete Blood Count
+• Blood Sugar (Fasting)
+• Lipid Profile
+• Liver Function Test
+
+**Comprehensive - ₹2,499**
+• All Basic tests +
+• Thyroid Profile
+• Kidney Function Test
+• Vitamin D & B12
+• ECG
+
+**Premium Full Body - ₹4,999**
+• All Comprehensive tests +
+• Ultrasound Abdomen
+• Chest X-Ray
+• Stress Test
+• Cancer Markers
+
+🎁 **Special Offer:** 40% OFF until Jan 31, 2026
+
+📋 All reports available in 24-48 hours
+
+Would you like to book a health checkup?`;
+                
+            } else {
+                return `Thank you for your question! 😊
+
+I'm here to help with:
+• **Health Information** - Symptoms, conditions, general advice
+• **Appointments** - Book consultations with doctors
+• **Wellness Tips** - Diet, exercise, preventive care
+• **Emergency Guidance** - What to do in urgent situations
+• **Health Packages** - Checkup and screening options
+
+Could you please provide more details about what you'd like to know? I'll do my best to assist you!
+
+💡 **Pro Tip:** The more specific your question, the better I can help you.`;
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            
+            // Disable send button
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                // Get AI response
+                const response = await getGeminiResponse(message);
+                
+                // Hide typing indicator and show response
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    addMessage(response, false);
+                    sendBtn.disabled = false;
+                    input.focus();
+                }, 800);
+                
+            } catch (error) {
+                hideTypingIndicator();
+                showError('Something went wrong. Please try again.');
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        function sendQuickMessage(message) {
+            const input = document.getElementById('messageInput');
+            input.value = message;
+            sendMessage();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        // Auto-focus input on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('messageInput').focus();
+        });
+    </script>
+</body>
+</html>

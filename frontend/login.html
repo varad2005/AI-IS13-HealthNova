@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Login to Health Nova">
+    <title>Sign In - Health Nova</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="/js/i18n.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        .login-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Left Side - Login Form */
+        .login-left {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+        }
+
+        .login-form-wrapper {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            color: #333;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #888;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+            background: transparent;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-bottom-color: #1e88e5;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+            font-weight: 300;
+        }
+
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 30px;
+        }
+
+        .forgot-password a {
+            color: #555;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .forgot-password a:hover {
+            color: #1e88e5;
+        }
+
+        .btn-signin {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .btn-signin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 136, 229, 0.4);
+        }
+
+        .social-login {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .social-login p {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .social-icon i {
+            font-size: 1.3rem;
+        }
+
+        .social-icon.google {
+            color: #db4437;
+        }
+
+        .social-icon.facebook {
+            color: #4267B2;
+        }
+
+        /* Right Side - Welcome Panel */
+        .login-right {
+            flex: 1;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-right::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .welcome-description {
+            font-size: 1rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .btn-signup {
+            padding: 14px 50px;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-signup:hover {
+            background: white;
+            color: #1e88e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+        }
+
+        .illustration {
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 300px;
+            height: 300px;
+            opacity: 0.1;
+        }
+
+        /* Decorative Elements */
+        .decorative-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .circle-1 {
+            width: 150px;
+            height: 150px;
+            top: 10%;
+            right: 10%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .circle-2 {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            right: 15%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-right {
+                display: none;
+            }
+
+            .login-left {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .login-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .form-group input {
+                padding: 12px 14px;
+            }
+
+            .btn-signin {
+                padding: 14px;
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Left Side - Login Form -->
+        <div class="login-left">
+            <a href="landing.html" class="btn btn-link position-absolute top-0 start-0 m-3 text-primary">
+                <i class="bi bi-arrow-left"></i> <span data-i18n="back">Back</span>
+            </a>
+            <div class="dropdown position-absolute top-0 end-0 m-3">
+                <button class="btn btn-light btn-sm dropdown-toggle language-dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-translate me-1"></i><span data-i18n="language">Language</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item language-option" href="#" data-lang="en">English</a></li>
+                    <li><a class="dropdown-item language-option" href="#" data-lang="hi">हिन्दी</a></li>
+                    <li><a class="dropdown-item language-option" href="#" data-lang="mr">मराठी</a></li>
+                </ul>
+            </div>
+            <div class="login-form-wrapper">
+                <div class="login-header">
+                    <h2 data-i18n="login">SIGN IN</h2>
+                    <p data-i18n="login_title">Welcome Back</p>
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="phone_number" data-i18n="phone_number">Phone Number</label>
+                        <input 
+                            type="tel" 
+                            id="phone_number" 
+                            name="phone_number"
+                            placeholder="Enter your phone number"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password" data-i18n="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            placeholder="Enter your password"
+                            required
+                        >
+                    </div>
+
+                    <div class="forgot-password">
+                        <a href="#forgot-password" data-i18n="forgot_password">Forgot Your Password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-signin" id="signInBtn" data-i18n="signin">Sign In</button>
+
+                    <div class="social-login">
+                        <p>or Sign In using</p>
+                        <div class="social-icons">
+                            <div class="social-icon google">
+                                <i class="bi bi-google"></i>
+                            </div>
+                            <div class="social-icon facebook">
+                                <i class="bi bi-facebook"></i>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Side - Welcome Panel -->
+        <div class="login-right">
+            <div class="decorative-circle circle-1"></div>
+            <div class="decorative-circle circle-2"></div>
+            
+            <div class="welcome-content">
+                <div class="logo-text">
+                    <i class="bi bi-heart-pulse-fill"></i> HEALTH NOVA
+                </div>
+                <h1 class="welcome-title" data-i18n="login_title">Welcome Back</h1>
+                <p class="welcome-description">
+                    Fill up personal information and<br>
+                    start your journey with us.
+                </p>
+                <a href="register.html" class="btn-signup" data-i18n="register">Sign up now</a>
+            </div>
+
+            <svg class="illustration" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <path fill="rgba(255,255,255,0.1)" d="M45.7,-57.8C57.5,-47.3,64.5,-31.7,67.4,-15.3C70.3,1.1,69.1,18.3,61.5,32.1C53.9,45.9,39.9,56.3,24.3,61.5C8.7,66.7,-8.5,66.7,-24.3,61.5C-40.1,56.3,-54.5,45.9,-63.1,31.7C-71.7,17.5,-74.5,-0.1,-71.3,-16.9C-68.1,-33.7,-59,-49.7,-46.3,-59.9C-33.6,-70.1,-16.8,-74.5,-0.1,-74.4C16.6,-74.3,33.9,-68.3,45.7,-57.8Z" transform="translate(100 100)" />
+            </svg>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form submission handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const phoneNumber = document.getElementById('phone_number').value;
+            const password = document.getElementById('password').value;
+            const signInBtn = document.getElementById('signInBtn');
+            
+            // Disable button during submission
+            signInBtn.disabled = true;
+            signInBtn.textContent = 'Signing In...';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Important for session cookies
+                    body: JSON.stringify({
+                        phone_number: phoneNumber,
+                        password: password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    // Login successful
+                    console.log('Login successful:', data);
+                    
+                    // Store user data in sessionStorage for client-side access
+                    sessionStorage.setItem('user', JSON.stringify(data.data.user));
+                    sessionStorage.setItem('isAuthenticated', 'true');
+                    
+                    // Show success message
+                    signInBtn.textContent = '✓ Success! Redirecting...';
+                    signInBtn.classList.add('btn-success');
+                    
+                    // Redirect to appropriate dashboard based on user role
+                    const redirectUrl = data.data.redirect_url;
+                    setTimeout(() => {
+                        window.location.href = redirectUrl;
+                    }, 500);
+                } else {
+                    // Login failed
+                    alert(data.message || 'Login failed. Please check your credentials.');
+                    signInBtn.disabled = false;
+                    signInBtn.textContent = 'Sign In';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                alert('Unable to connect to server. Please ensure the backend is running.');
+                signInBtn.disabled = false;
+                signInBtn.textContent = 'Sign In';
+            }
+        });
+
+        // Social login handlers
+        document.querySelector('.social-icon.google').addEventListener('click', function() {
+            console.log('Google login clicked');
+            alert('Google OAuth will be integrated with backend');
+        });
+
+        document.querySelector('.social-icon.facebook').addEventListener('click', function() {
+            console.log('Facebook login clicked');
+            alert('Facebook OAuth will be integrated with backend');
+        });
+    </script>
+</body>
+</html>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

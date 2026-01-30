@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Razorpay Integration Test - Health Nova</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">
+                            <i class="bi bi-credit-card"></i> Razorpay Integration Test
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">
+                            Test the Razorpay payment integration with different payment scenarios.
+                            Use Razorpay test card: <strong>4111 1111 1111 1111</strong>
+                        </p>
+                        
+                        <hr>
+                        
+                        <!-- Doctor Appointment Payment -->
+                        <div class="mb-4">
+                            <h5><i class="bi bi-calendar-heart"></i> Doctor Appointment</h5>
+                            <p class="small text-muted">Book an appointment with Dr. Sharma</p>
+                            <button 
+                                class="btn btn-primary"
+                                onclick="payForAppointment('APT-123', 'Dr. Sharma', 300, function(payment) {
+                                    alert('Appointment booked! Payment ID: ' + payment.id);
+                                })">
+                                <i class="bi bi-currency-rupee"></i> Pay ₹300 for Appointment
+                            </button>
+                        </div>
+                        
+                        <!-- Lab Test Payment -->
+                        <div class="mb-4">
+                            <h5><i class="bi bi-clipboard2-pulse"></i> Lab Test</h5>
+                            <p class="small text-muted">Pay for Blood Sugar Test</p>
+                            <button 
+                                class="btn btn-success"
+                                onclick="payForLabTest('LT-456', 'Blood Sugar Test', 250, function(payment) {
+                                    alert('Lab test booked! Payment ID: ' + payment.id);
+                                })">
+                                <i class="bi bi-currency-rupee"></i> Pay ₹250 for Blood Test
+                            </button>
+                        </div>
+                        
+                        <!-- Health Package Payment -->
+                        <div class="mb-4">
+                            <h5><i class="bi bi-heart-pulse"></i> Health Package</h5>
+                            <p class="small text-muted">Subscribe to Premium Health Package</p>
+                            <button 
+                                class="btn btn-warning"
+                                onclick="payForPackage('PKG-789', 'Premium Health Package', 999, function(payment) {
+                                    alert('Package activated! Payment ID: ' + payment.id);
+                                })">
+                                <i class="bi bi-currency-rupee"></i> Pay ₹999 for Package
+                            </button>
+                        </div>
+                        
+                        <!-- Custom Amount Payment -->
+                        <div class="mb-4">
+                            <h5><i class="bi bi-calculator"></i> Custom Amount</h5>
+                            <p class="small text-muted">Enter any amount to test</p>
+                            <div class="input-group">
+                                <span class="input-group-text">₹</span>
+                                <input 
+                                    type="number" 
+                                    id="customAmount" 
+                                    class="form-control" 
+                                    placeholder="Enter amount"
+                                    value="100"
+                                    min="1">
+                                <button 
+                                    class="btn btn-info"
+                                    onclick="initiatePayment(
+                                        parseInt(document.getElementById('customAmount').value),
+                                        'general',
+                                        {test: 'custom_payment'},
+                                        function(payment) {
+                                            alert('Payment successful! ID: ' + payment.id);
+                                        }
+                                    )">
+                                    Pay Now
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- API Status -->
+                        <div class="alert alert-info">
+                            <h6><i class="bi bi-info-circle"></i> API Status</h6>
+                            <div id="apiStatus">Checking...</div>
+                            <button class="btn btn-sm btn-outline-info mt-2" onclick="checkAPIStatus()">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh Status
+                            </button>
+                        </div>
+                        
+                        <!-- Instructions -->
+                        <div class="alert alert-warning">
+                            <h6><i class="bi bi-exclamation-triangle"></i> Test Instructions</h6>
+                            <ol class="mb-0 small">
+                                <li>Ensure backend server is running: <code>python app.py</code></li>
+                                <li>Add Razorpay test keys to <code>backend/.env</code></li>
+                                <li>Use test card: <strong>4111 1111 1111 1111</strong></li>
+                                <li>Any future expiry date and CVV</li>
+                                <li>Check browser console for detailed logs</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Razorpay Integration Script -->
+    <script src="/js/razorpay-integration.js"></script>
+    
+    <!-- Test Page Scripts -->
+    <script>
+        // Check API status on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAPIStatus();
+        });
+        
+        // Check payment API status
+        async function checkAPIStatus() {
+            const statusDiv = document.getElementById('apiStatus');
+            statusDiv.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Checking...';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/payments/health');
+                const data = await response.json();
+                
+                if (data.status === 'healthy' && data.razorpay_configured) {
+                    statusDiv.innerHTML = `
+                        <span class="text-success">
+                            <i class="bi bi-check-circle-fill"></i> 
+                            Payment API is healthy and Razorpay is configured
+                        </span>
+                    `;
+                } else {
+                    statusDiv.innerHTML = `
+                        <span class="text-warning">
+                            <i class="bi bi-exclamation-circle-fill"></i> 
+                            Payment API is running but Razorpay is NOT configured<br>
+                            <small>Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to backend/.env</small>
+                        </span>
+                    `;
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `
+                    <span class="text-danger">
+                        <i class="bi bi-x-circle-fill"></i> 
+                        Cannot connect to payment API<br>
+                        <small>Ensure backend server is running on http://127.0.0.1:5000</small>
+                    </span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

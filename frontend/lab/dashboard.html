@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Command Center | Health Nova</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --hn-blue: #0052e0; 
+            --hn-dark-blue: #0033aa;
+            --hn-dark: #0f172a;
+            --hn-light: #f8fafc;
+            --footer-black: #080c14;
+        }
+
+        body { background-color: #f1f5f9; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--hn-dark); scroll-behavior: smooth; }
+
+        /* --- HEADER --- */
+        .dashboard-header {
+            background: linear-gradient(135deg, rgba(0, 82, 224, 0.92), rgba(15, 23, 42, 0.98)), 
+                        url('https://images.unsplash.com/photo-1579152276503-34e8e19b5e53?auto=format&fit=crop&q=80&w=1920');
+            background-size: cover; background-position: center; background-attachment: fixed;
+            color: white; padding: 80px 0 120px 0; border-radius: 0 0 3.5rem 3.5rem;
+        }
+
+        /* --- CARDS --- */
+        .stat-card, .dashboard-card { 
+            border: none; border-radius: 24px; background: white; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05); transition: 0.3s;
+        }
+
+        .feature-icon-box {
+            width: 70px; height: 70px; border-radius: 20px;
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;
+        }
+
+        /* --- ACTIVE BUTTON STATE --- */
+        .btn-action { 
+            padding: 12px 24px; font-weight: 700; border-radius: 16px; 
+            text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; 
+            border: 2px solid var(--hn-blue); color: var(--hn-blue); transition: all 0.2s ease;
+            background: transparent;
+        }
+        
+        .btn-action.active {
+            background-color: var(--hn-dark-blue) !important;
+            color: white !important;
+            transform: scale(0.95);
+            box-shadow: 0 0 15px rgba(0, 82, 224, 0.4);
+        }
+
+        /* --- DYNAMIC WORKSPACES --- */
+        .workspace-section { display: none; opacity: 0; transform: translateY(20px); transition: all 0.4s ease; }
+        .workspace-section.show { display: block; opacity: 1; transform: translateY(0); }
+
+        /* --- FOOTER --- */
+        .footer-black { 
+            background: var(--footer-black); color: #94a3b8; 
+            padding: 60px 0; border-top: 4px solid var(--hn-blue); 
+        }
+        .footer-black h5 { color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-800 text-primary" href="#"><i class="bi bi-hexagon-fill me-2"></i>HEALTH NOVA</a>
+            <div class="ms-auto d-flex align-items-center">
+                <div class="text-end me-3 d-none d-md-block">
+                    <div class="fw-bold lh-1 small">Suresh Patel</div>
+                    <span class="badge bg-primary-subtle text-primary mt-1" style="font-size: 0.6rem;">CHIEF TECHNICIAN</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill px-4" onclick="location.reload()">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-header text-center">
+        <div class="container">
+            <span class="badge bg-white bg-opacity-25 text-white mb-3 px-3 py-2 rounded-pill small">SYSTEM LIVE: 24/7 MONITORING</span>
+            <h1 class="display-4 fw-800 mb-3">Lab Command Center</h1>
+            <p class="fs-5 opacity-75">Click a module below to launch the workspace</p>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top: -60px;">
+        <div class="row g-4 mb-5 text-center">
+            <div class="col-md-3"><div class="card stat-card p-4 shadow-sm"><h2 class="fw-800 text-warning">15</h2><p class="text-muted small fw-bold mb-0">PENDING</p></div></div>
+            <div class="col-md-3"><div class="card stat-card p-4 shadow-sm"><h2 class="fw-800 text-success">48</h2><p class="text-muted small fw-bold mb-0">COMPLETED</p></div></div>
+            <div class="col-md-3"><div class="card stat-card p-4 shadow-sm"><h2 class="fw-800 text-primary">12</h2><p class="text-muted small fw-bold mb-0">SCHEDULED</p></div></div>
+            <div class="col-md-3"><div class="card stat-card p-4 shadow-sm"><h2 class="fw-800 text-info">06</h2><p class="text-muted small fw-bold mb-0">UPLOADS</p></div></div>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 text-center p-4">
+                    <div class="bg-primary bg-opacity-10 text-primary feature-icon-box"><i class="bi bi-calendar2-plus fs-2"></i></div>
+                    <button class="btn btn-action w-100" onclick="launchWorkspace('planner', this)">Open Planner</button>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 text-center p-4">
+                    <div class="bg-success bg-opacity-10 text-success feature-icon-box"><i class="bi bi-file-earmark-medical fs-2"></i></div>
+                    <button class="btn btn-success w-100 btn-action" onclick="launchWorkspace('upload', this)">Select View</button>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 text-center p-4">
+                    <div class="bg-info bg-opacity-10 text-info feature-icon-box"><i class="bi bi-activity fs-2"></i></div>
+                    <button class="btn btn-success  w-100 btn-action" onclick="launchWorkspace('monitor', this)">Live Monitor</button>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 text-center p-4">
+                    <div class="bg-warning bg-opacity-10 text-warning feature-icon-box"><i class="bi bi-archive fs-2"></i></div>
+                    <button class="btn btn-success w-100 btn-action" onclick="launchWorkspace('history', this)">History</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="workspace-container">
+            <div id="planner" class="workspace-section card p-5 border-0 shadow-sm rounded-4 mb-5">
+                <h3 class="fw-bold text-primary mb-4"><i class="bi bi-calendar-check me-2"></i> Daily Scheduling Planner</h3>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light"><tr><th>Time Slot</th><th>Patient ID</th><th>Test Type</th><th>Hub</th></tr></thead>
+                        <tbody>
+                            <tr><td>10:00 AM</td><td>HN-902</td><td>Pathology - CBC</td><td>Nashik Central</td></tr>
+                            <tr><td>11:30 AM</td><td>HN-915</td><td>Digital X-Ray</td><td>Ozar Hub</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="upload" class="workspace-section card p-5 border-0 shadow-sm rounded-4 mb-5">
+                <h3 class="fw-bold text-success mb-4"><i class="bi bi-file-earmark-arrow-up me-2"></i> Diagnostic Report Hub</h3>
+                
+                <div class="p-5 bg-light border-dashed rounded-4 text-center mt-4">
+                    <p class="mb-0">Drag & drop NABL certified reports here or click to browse.</p>
+                </div>
+            </div>
+
+            <div id="monitor" class="workspace-section card p-5 border-0 shadow-sm rounded-4 mb-5">
+                <h3 class="fw-bold text-info mb-4"><i class="bi bi-broadcast me-2"></i> Real-time Hub Logistics Monitor</h3>
+                
+                <div class="alert alert-info mt-4">Current Hub Load: Normal (5 Active Samples In-Transit)</div>
+            </div>
+
+            <div id="history" class="workspace-section card p-5 border-0 shadow-sm rounded-4 mb-5">
+                <h3 class="fw-bold text-warning mb-4"><i class="bi bi-clock-history me-2"></i> Verified Lab Archives</h3>
+                <input type="text" class="form-control mb-3" placeholder="Search by Patient ID or Name...">
+                <table class="table table-hover">
+                    <thead><tr><th>Date</th><th>Patient ID</th><th>Doctor Approval</th><th>Status</th></tr></thead>
+                    <tbody>
+                        <tr><td>Jan 29, 2026</td><td>HN-102</td><td>Dr. V. Rao</td><td><span class="badge bg-success">Verified</span></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer-black">
+        <div class="container text-center">
+            <div class="mb-4 d-inline-flex align-items-center justify-content-center bg-white bg-opacity-10 p-3 rounded-circle" style="width: 80px; height: 80px;">
+                <i class="bi bi-shield-lock-fill text-white fs-2"></i>
+            </div>
+            <h5 class="fw-bold mb-1">Health Nova Lab Systems</h5>
+            <p class="small mb-4 opacity-75">Secure diagnostic tracking for the rural health initiative.</p>
+            <div class="mt-4 pt-4 border-top border-secondary">
+                <p class="small mb-0 opacity-50">&copy; 2026 Health Nova Inc. | Data Encrypted</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function launchWorkspace(id, btn) {
+            // 1. Set active state on button only
+            document.querySelectorAll('.btn-action').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // 2. Hide all workspaces
+            document.querySelectorAll('.workspace-section').forEach(section => {
+                section.classList.remove('show');
+                section.style.display = 'none';
+            });
+
+            // 3. Show selected workspace with animation
+            const target = document.getElementById(id);
+            target.style.display = 'block';
+            setTimeout(() => {
+                target.classList.add('show');
+            }, 10);
+
+            // 4. Scroll to workspace
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

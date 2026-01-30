@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Consultation - Health Nova</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+        }
+
+        /* Remote Video (Doctor/Patient on other end) - Full Screen */
+        #remoteVideo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #000;
+        }
+
+        /* Local Video (Your camera) - Small preview in corner */
+        #localVideo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            height: 188px;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 3px solid #1e88e5;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        /* Waiting State */
+        .waiting-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            transition: opacity 0.5s ease;
+        }
+
+        .waiting-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .waiting-spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 30px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .waiting-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .waiting-subtext {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* Control Bar */
+        .control-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px 30px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+            z-index: 200;
+        }
+
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .btn-mute {
+            background: #424242;
+        }
+
+        .btn-mute.active {
+            background: #f44336;
+        }
+
+        .btn-video {
+            background: #424242;
+        }
+
+        .btn-video.active {
+            background: #f44336;
+        }
+
+        .btn-end {
+            background: #f44336;
+        }
+
+        .btn-end:hover {
+            background: #d32f2f;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 12px 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-dot.connecting {
+            background: #ff9800;
+        }
+
+        .status-dot.disconnected {
+            background: #f44336;
+        }
+
+        /* Room Info */
+        .room-info {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 100;
+        }
+
+        /* Error Message */
+        .error-message {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #f44336;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 12px;
+            display: none;
+            z-index: 300;
+            box-shadow: 0 4px 20px rgba(244,67,54,0.5);
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            #localVideo {
+                width: 120px;
+                height: 90px;
+                top: 15px;
+                right: 15px;
+            }
+
+            .control-bar {
+                padding: 15px 20px;
+                gap: 15px;
+            }
+
+            .control-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 1.2rem;
+            }
+
+            .status-indicator {
+                font-size: 0.8rem;
+                padding: 8px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container">
+        <!-- Waiting Overlay -->
+        <div class="waiting-overlay" id="waitingOverlay">
+            <div class="waiting-spinner"></div>
+            <div class="waiting-text" id="waitingText">Connecting...</div>
+            <div class="waiting-subtext">Room ID: <span id="displayRoomId"></span></div>
+        </div>
+
+        <!-- Remote Video (Doctor/Other Participant) -->
+        <video id="remoteVideo" autoplay playsinline></video>
+
+        <!-- Local Video (Your Camera) -->
+        <video id="localVideo" autoplay playsinline muted></video>
+
+        <!-- Status Indicator -->
+        <div class="status-indicator">
+            <div class="status-dot connecting" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+
+        <!-- Room Info -->
+        <div class="room-info">
+            <i class="bi bi-shield-lock me-2"></i>
+            <span id="roomInfo">Secure Connection</span>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span id="errorText"></span>
+        </div>
+
+        <!-- Control Bar -->
+        <div class="control-bar">
+            <button class="control-btn btn-mute" id="muteBtn" title="Mute/Unmute">
+                <i class="bi bi-mic-fill"></i>
+            </button>
+            <button class="control-btn btn-video" id="videoBtn" title="Video On/Off">
+                <i class="bi bi-camera-video-fill"></i>
+            </button>
+            <button class="control-btn btn-end" id="endBtn" title="End Call">
+                <i class="bi bi-telephone-x-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Socket.IO Client -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        // Get room ID from URL parameter
+        // SECURITY: Now supports appointment_id as room identifier (doctor-controlled meetings)
+        // Legacy support: Still accepts ?room= parameter for backward compatibility
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // CRITICAL: appointment_id IS the WebRTC room identifier
+        // - Doctor clicks "Start Consultation" → redirects with ?appointment_id=123
+        // - Patient polls status → when live, clicks Join → redirects with ?appointment_id=123
+        // - Both connect to the same WebRTC room using appointment_id
+        // - No manual sharing of meeting IDs/links required
+        const APPOINTMENT_ID = urlParams.get('appointment_id');
+        const ROOM_ID = APPOINTMENT_ID || urlParams.get('room') || 'room_' + Math.random().toString(36).substr(2, 9);
+        const USER_TYPE = urlParams.get('type') || 'patient'; // 'patient' or 'doctor'
+        const USER_NAME = urlParams.get('name') || 'User';
+        const IS_APPOINTMENT_BASED = !!APPOINTMENT_ID; // Track if this is appointment-based consultation
+        
+        // WebRTC Configuration
+        // Using Google's public STUN server for NAT traversal
+        const ICE_SERVERS = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+        
+        // ============================================
+        // GLOBAL VARIABLES
+        // ============================================
+        
+        let socket;                      // Socket.IO connection
+        let peerConnection;              // WebRTC peer connection
+        let localStream;                 // Local video/audio stream
+        let remoteStream;                // Remote video/audio stream
+        let isMuted = false;             // Audio mute state
+        let isVideoOff = false;          // Video off state
+        let isConnected = false;         // Connection state
+        
+        // ============================================
+        // DOM ELEMENTS
+        // ============================================
+        
+        const localVideo = document.getElementById('localVideo');
+        const remoteVideo = document.getElementById('remoteVideo');
+        const waitingOverlay = document.getElementById('waitingOverlay');
+        const muteBtn = document.getElementById('muteBtn');
+        const videoBtn = document.getElementById('videoBtn');
+        const endBtn = document.getElementById('endBtn');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const displayRoomId = document.getElementById('displayRoomId');
+        const waitingText = document.getElementById('waitingText');
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        
+        async function init() {
+            displayRoomId.textContent = ROOM_ID;
+            
+            // APPOINTMENT-BASED MEETING VERIFICATION
+            // If this is an appointment-based meeting, verify status before connecting
+            if (IS_APPOINTMENT_BASED) {
+                const canProceed = await verifyAppointmentMeeting();
+                if (!canProceed) {
+                    return; // Don't initialize if meeting is not accessible
+                }
+            }
+            
+            // Set appropriate waiting message based on user type
+            if (USER_TYPE === 'doctor') {
+                waitingText.textContent = 'Waiting for patient...';
+            } else {
+                waitingText.textContent = 'Waiting for doctor...';
+            }
+            
+            try {
+                // Step 1: Get user's camera and microphone
+                await setupLocalMedia();
+                
+                // Step 2: Connect to signaling server
+                setupSocketConnection();
+                
+                // Step 3: Setup control buttons
+                setupControlButtons();
+                
+            } catch (error) {
+                showError('Failed to access camera/microphone. Please allow permissions.');
+                console.error('Initialization error:', error);
+            }
+        }
+
+        /**
+         * Verify appointment meeting status before connecting
+         * SECURITY: Ensures patient can only join when meeting is live
+         * 
+         * @returns {boolean} True if can proceed, false otherwise
+         */
+        async function verifyAppointmentMeeting() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                showError('Authentication required. Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 2000);
+                return false;
+            }
+            
+            try {
+                const response = await fetch(`/video/meeting-status/${APPOINTMENT_ID}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok || !data.success) {
+                    showError(data.error || 'Failed to verify meeting status');
+                    setTimeout(() => {
+                        // Redirect back to dashboard
+                        window.location.href = USER_TYPE === 'doctor' ? '/doctor/dashboard.html' : '/patient/dashboard.html';
+                    }, 3000);
+                    return false;
+                }
+                
+                // Check if user can join
+                if (!data.can_join) {
+                    let message = data.message || 'Meeting is not available';
+                    
+                    if (USER_TYPE === 'patient' && data.meeting_status === 'not_started') {
+                        message = 'Waiting for doctor to start the consultation. Please return to your dashboard.';
+                    } else if (data.meeting_status === 'ended') {
+                        message = 'This consultation has already ended.';
+                    }
+                    
+                    showError(message);
+                    setTimeout(() => {
+                        window.location.href = USER_TYPE === 'doctor' ? '/doctor/dashboard.html' : '/patient/dashboard.html';
+                    }, 3000);
+                    return false;
+                }
+                
+                // Meeting is valid and accessible
+                return true;
+                
+            } catch (error) {
+                console.error('Error verifying meeting:', error);
+                showError('Failed to verify meeting status. Please try again.');
+                setTimeout(() => {
+                    window.location.href = USER_TYPE === 'doctor' ? '/doctor/dashboard.html' : '/patient/dashboard.html';
+                }, 3000);
+                return false;
+            }
+        }
+        
+        // ============================================
+        // MEDIA SETUP
+        // ============================================
+        
+        async function setupLocalMedia() {
+            /**
+             * Request access to user's camera and microphone
+             * Display local video in the small preview window
+             */
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: true
+                });
+                
+                localVideo.srcObject = localStream;
+                console.log('✓ Local media setup complete');
+                
+            } catch (error) {
+                console.error('Error accessing media devices:', error);
+                throw error;
+            }
+        }
+        
+        // ============================================
+        // SOCKET.IO SIGNALING
+        // ============================================
+        
+        function setupSocketConnection() {
+            /**
+             * Connect to Flask-SocketIO server for WebRTC signaling
+             * The server acts as a messenger between peers
+             */
+            socket = io('http://127.0.0.1:5000', {
+                transports: ['websocket', 'polling']
+            });
+            
+            // Connected to server
+            socket.on('connect', () => {
+                console.log('✓ Connected to signaling server');
+                updateStatus('Joining room...', 'connecting');
+                
+                // Join the consultation room
+                socket.emit('join_room', {
+                    room_id: ROOM_ID,
+                    user_type: USER_TYPE,
+                    user_name: USER_NAME
+                });
+            });
+            
+            // Successfully joined room
+            socket.on('room_joined', (data) => {
+                console.log('✓ Joined room:', data);
+                updateStatus('In room', 'connected');
+                
+                if (data.participants === 2) {
+                    // We're the second person - wait for offer, don't create one
+                    console.log('Waiting for offer from first participant...');
+                    waitingText.textContent = 'Connecting to call...';
+                } else {
+                    // We're the first person
+                    if (USER_TYPE === 'doctor') {
+                        waitingText.textContent = 'Waiting for patient...';
+                    } else {
+                        waitingText.textContent = 'Waiting for doctor...';
+                    }
+                }
+            });
+            
+            // Another user joined the room
+            socket.on('user_joined', (data) => {
+                console.log('✓ User joined:', data);
+                updateStatus('Participant joined, connecting...', 'connecting');
+                
+                // Update waiting message
+                waitingText.textContent = 'Connecting to call...';
+                
+                if (data.participants === 2) {
+                    // We were first, now second person joined - create offer
+                    console.log('We were first, creating offer...');
+                    startCall();
+                    
+                    // Hide waiting overlay after a short delay to show connection status
+                    setTimeout(() => {
+                        if (isConnected || peerConnection) {
+                            waitingOverlay.classList.add('hidden');
+                        }
+                    }, 2000);
+                }
+            });
+            
+            // Received WebRTC offer from peer
+            socket.on('offer', async (data) => {
+                console.log('← Received offer from peer');
+                await handleOffer(data.offer);
+            });
+            
+            // Received WebRTC answer from peer
+            socket.on('answer', async (data) => {
+                console.log('← Received answer from peer');
+                await handleAnswer(data.answer);
+            });
+            
+            // Received ICE candidate from peer
+            socket.on('ice_candidate', async (data) => {
+                console.log('← Received ICE candidate');
+                await handleIceCandidate(data.candidate);
+            });
+            
+            // User left the room
+            socket.on('user_left', () => {
+                console.log('✗ User left the room');
+                updateStatus('User disconnected', 'disconnected');
+                showError('The other participant left the call');
+                
+                // Show waiting overlay again
+                waitingOverlay.classList.remove('hidden');
+                
+                // Close peer connection
+                if (peerConnection) {
+                    peerConnection.close();
+                    peerConnection = null;
+                }
+                
+                // Clear remote video
+                remoteVideo.srcObject = null;
+            });
+            
+            // Error from server
+            socket.on('error', (data) => {
+                console.error('Server error:', data.message);
+                showError(data.message);
+            });
+            
+            // Disconnected from server
+            socket.on('disconnect', () => {
+                console.log('✗ Disconnected from server');
+                updateStatus('Disconnected', 'disconnected');
+            });
+        }
+        
+        // ============================================
+        // WEBRTC PEER CONNECTION
+        // ============================================
+        
+        async function startCall() {
+            /**
+             * Initialize WebRTC peer connection
+             * This creates the connection between two browsers
+             */
+            console.log('🚀 Starting WebRTC call...');
+            
+            // Create peer connection with STUN servers
+            peerConnection = new RTCPeerConnection(ICE_SERVERS);
+            
+            // Add local stream tracks to peer connection
+            localStream.getTracks().forEach(track => {
+                peerConnection.addTrack(track, localStream);
+                console.log('✓ Added local track:', track.kind);
+            });
+            
+            // Handle remote stream (when peer sends their video/audio)
+            peerConnection.ontrack = (event) => {
+                console.log('← Received remote track:', event.track.kind);
+                
+                if (!remoteStream) {
+                    remoteStream = new MediaStream();
+                    remoteVideo.srcObject = remoteStream;
+                }
+                
+                remoteStream.addTrack(event.track);
+                
+                // Hide waiting overlay when we get remote video
+                if (event.track.kind === 'video') {
+                    waitingOverlay.classList.add('hidden');
+                    updateStatus('Connected', 'connected');
+                    isConnected = true;
+                }
+            };
+            
+            // Handle ICE candidates (network paths)
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log('→ Sending ICE candidate');
+                    socket.emit('ice_candidate', {
+                        room_id: ROOM_ID,
+                        candidate: event.candidate
+                    });
+                }
+            };
+            
+            // Monitor connection state
+            peerConnection.onconnectionstatechange = () => {
+                console.log('Connection state:', peerConnection.connectionState);
+                
+                if (peerConnection.connectionState === 'connected') {
+                    updateStatus('Connected', 'connected');
+                    isConnected = true;
+                    // Hide waiting overlay when peer connection is established
+                    waitingOverlay.classList.add('hidden');
+                } else if (peerConnection.connectionState === 'connecting') {
+                    updateStatus('Connecting...', 'connecting');
+                } else if (peerConnection.connectionState === 'disconnected' || 
+                    peerConnection.connectionState === 'failed') {
+                    updateStatus('Connection lost', 'disconnected');
+                }
+            };
+            
+            // Create and send offer (initiator starts the handshake)
+            // First person to join creates the offer
+            try {
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                
+                console.log('→ Sending offer to peer');
+                socket.emit('offer', {
+                    room_id: ROOM_ID,
+                    offer: offer
+                });
+                
+            } catch (error) {
+                console.error('Error creating offer:', error);
+            }
+        }
+        
+        async function handleOffer(offer) {
+            /**
+             * Handle incoming WebRTC offer from peer
+             * Respond with an answer
+             */
+            try {
+                // Create peer connection if not exists
+                if (!peerConnection) {
+                    peerConnection = new RTCPeerConnection(ICE_SERVERS);
+                    
+                    // Add local tracks
+                    localStream.getTracks().forEach(track => {
+                        peerConnection.addTrack(track, localStream);
+                    });
+                    
+                    // Setup event handlers (same as in startCall)
+                    peerConnection.ontrack = (event) => {
+                        console.log('← Received remote track:', event.track.kind);
+                        
+                        if (!remoteStream) {
+                            remoteStream = new MediaStream();
+                            remoteVideo.srcObject = remoteStream;
+                        }
+                        
+                        remoteStream.addTrack(event.track);
+                        
+                        if (event.track.kind === 'video') {
+                            waitingOverlay.classList.add('hidden');
+                            updateStatus('Connected', 'connected');
+                            isConnected = true;
+                        }
+                    };
+                    
+                    peerConnection.onicecandidate = (event) => {
+                        if (event.candidate) {
+                            socket.emit('ice_candidate', {
+                                room_id: ROOM_ID,
+                                candidate: event.candidate
+                            });
+                        }
+                    };
+                    
+                    // Monitor connection state
+                    peerConnection.onconnectionstatechange = () => {
+                        console.log('Connection state:', peerConnection.connectionState);
+                        
+                        if (peerConnection.connectionState === 'connected') {
+                            updateStatus('Connected', 'connected');
+                            isConnected = true;
+                            waitingOverlay.classList.add('hidden');
+                        } else if (peerConnection.connectionState === 'connecting') {
+                            updateStatus('Connecting...', 'connecting');
+                        } else if (peerConnection.connectionState === 'disconnected' || 
+                            peerConnection.connectionState === 'failed') {
+                            updateStatus('Connection lost', 'disconnected');
+                        }
+                    };
+                }
+                
+                // Set remote description (the offer we received)
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+                
+                // Create answer
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                
+                console.log('→ Sending answer to peer');
+                socket.emit('answer', {
+                    room_id: ROOM_ID,
+                    answer: answer
+                });
+                
+            } catch (error) {
+                console.error('Error handling offer:', error);
+            }
+        }
+        
+        async function handleAnswer(answer) {
+            /**
+             * Handle incoming WebRTC answer from peer
+             */
+            try {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
+                console.log('✓ Answer set successfully');
+                
+            } catch (error) {
+                console.error('Error handling answer:', error);
+            }
+        }
+        
+        async function handleIceCandidate(candidate) {
+            /**
+             * Handle incoming ICE candidate from peer
+             * ICE candidates represent possible network paths
+             */
+            try {
+                if (peerConnection) {
+                    await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+                    console.log('✓ ICE candidate added');
+                }
+            } catch (error) {
+                console.error('Error adding ICE candidate:', error);
+            }
+        }
+        
+        // ============================================
+        // CONTROL BUTTONS
+        // ============================================
+        
+        function setupControlButtons() {
+            // Mute/Unmute button
+            muteBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                
+                localStream.getAudioTracks().forEach(track => {
+                    track.enabled = !isMuted;
+                });
+                
+                if (isMuted) {
+                    muteBtn.classList.add('active');
+                    muteBtn.innerHTML = '<i class="bi bi-mic-mute-fill"></i>';
+                } else {
+                    muteBtn.classList.remove('active');
+                    muteBtn.innerHTML = '<i class="bi bi-mic-fill"></i>';
+                }
+            });
+            
+            // Video on/off button
+            videoBtn.addEventListener('click', () => {
+                isVideoOff = !isVideoOff;
+                
+                localStream.getVideoTracks().forEach(track => {
+                    track.enabled = !isVideoOff;
+                });
+                
+                if (isVideoOff) {
+                    videoBtn.classList.add('active');
+                    videoBtn.innerHTML = '<i class="bi bi-camera-video-off-fill"></i>';
+                } else {
+                    videoBtn.classList.remove('active');
+                    videoBtn.innerHTML = '<i class="bi bi-camera-video-fill"></i>';
+                }
+            });
+            
+            // End call button
+            endBtn.addEventListener('click', () => {
+                endCall();
+            });
+        }
+        
+        async function endCall() {
+            /**
+             * End the video call and cleanup
+             * If doctor ends appointment-based meeting, update meeting_status to 'ended'
+             */
+            
+            // If this is an appointment-based meeting and user is doctor, mark meeting as ended
+            if (IS_APPOINTMENT_BASED && USER_TYPE === 'doctor') {
+                const token = localStorage.getItem('token');
+                
+                if (token) {
+                    try {
+                        await fetch(`/video/end-meeting/${APPOINTMENT_ID}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        // Don't wait for response, proceed with cleanup
+                    } catch (error) {
+                        console.error('Error ending meeting:', error);
+                        // Continue with cleanup anyway
+                    }
+                }
+            }
+            
+            // Notify server
+            if (socket) {
+                socket.emit('leave_room', { room_id: ROOM_ID });
+            }
+            
+            // Stop all media tracks
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Close peer connection
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            
+            // Close socket connection
+            if (socket) {
+                socket.disconnect();
+            }
+            
+            // Redirect back to appropriate dashboard
+            const dashboardUrl = USER_TYPE === 'doctor' ? '../doctor/dashboard.html' : 'dashboard.html';
+            window.location.href = dashboardUrl;
+        }
+        
+        // ============================================
+        // UI HELPERS
+        // ============================================
+        
+        function updateStatus(text, state) {
+            statusText.textContent = text;
+            statusDot.className = 'status-dot ' + state;
+        }
+        
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('show');
+            
+            setTimeout(() => {
+                errorMessage.classList.remove('show');
+            }, 5000);
+        }
+        
+        // ============================================
+        // START APPLICATION
+        // ============================================
+        
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', init);
+        
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (socket) {
+                socket.emit('leave_room', { room_id: ROOM_ID });
+            }
+        });
+    </script>
+</body>
+</html>

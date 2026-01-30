@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Doctor Dashboard - Health Nova">
+    <title>Doctor Dashboard - Health Nova</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-soft: #eef2ff;
+            --success: #06d6a0;
+            --success-soft: #e6fbf5;
+            --warning: #ffd166;
+            --warning-soft: #fff9e6;
+            --info: #4cc9f0;
+            --info-soft: #eaf9ff;
+            --danger: #ef476f;
+            --bg-body: #f4f7fa;
+            --card-radius: 20px;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: #2b2d42;
+        }
+
+        /* 1. Modern Soft UI: Glassmorphism Navbar */
+        .navbar {
+            background: rgba(255, 255, 255, 0.8) !important;
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            padding: 0.75rem 0;
+        }
+
+        /* 2. Soft UI Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #fff 0%, #f0f3ff 100%);
+            padding: 3rem 0;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(67, 97, 238, 0.05);
+        }
+
+        /* 3. Layered Shadows & High Radius Cards */
+        .card {
+            border: none;
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card {
+            border-left: 5px solid transparent;
+        }
+
+        /* 4. Semantic Color Palette (Soft Backgrounds) */
+        .border-success-soft { border-left-color: var(--success); background-color: var(--success-soft); }
+        .border-warning-soft { border-left-color: var(--warning); background-color: var(--warning-soft); }
+        .border-primary-soft { border-left-color: var(--primary); background-color: var(--primary-soft); }
+        .border-info-soft { border-left-color: var(--info); background-color: var(--info-soft); }
+
+        .dashboard-card {
+            border: 1px solid transparent;
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+            border-color: rgba(67, 97, 238, 0.1);
+        }
+
+        .table-card .card-header {
+            background-color: transparent;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 700;
+            padding: 1.25rem;
+        }
+
+        /* 5. Modern Table Styling */
+        .table thead th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #8d99ae;
+            border: none;
+        }
+
+        .btn-modern {
+            border-radius: 12px;
+            padding: 0.5rem 1.25rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .footer {
+            padding: 3rem 0;
+            background: transparent;
+            color: #8d99ae;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary d-flex align-items-center gap-2" href="../landing.html">
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 35px; height: 35px;">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                </div>
+                Health Nova
+            </a>
+            <div class="ms-auto d-flex align-items-center gap-3">
+                <button class="btn btn-outline-primary btn-sm rounded-pill" onclick="window.location.href='doctor-chatbot.html'">
+                    <i class="bi bi-robot"></i> Clinical Assistant
+                </button>
+                <div class="me-3 d-none d-md-block">
+                    <span class="text-muted small">Welcome,</span>
+                    <span class="fw-bold">Dr. Priya Sharma</span>
+                </div>
+                <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="window.location.href='../landing.html'">
+                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="fw-bold display-6 mb-1">Doctor Dashboard</h1>
+                    <p class="text-muted fs-5">Efficiency for clinical care in rural communities.</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <span class="badge bg-white text-primary shadow-sm p-2 px-3 rounded-pill border">
+                        <i class="bi bi-calendar3 me-2"></i> Jan 29, 2026
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="card stat-card border-success-soft">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0">24</h3>
+                                <p class="text-muted small mb-0">Total Patients</p>
+                            </div>
+                            <i class="bi bi-people text-success fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card border-warning-soft">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0">8</h3>
+                                <p class="text-muted small mb-0">Pending Reviews</p>
+                            </div>
+                            <i class="bi bi-clock-history text-warning fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card border-primary-soft">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0">5</h3>
+                                <p class="text-muted small mb-0">Today's Appointments</p>
+                            </div>
+                            <i class="bi bi-calendar-check text-primary fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stat-card border-info-soft">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h3 class="fw-bold mb-0">12</h3>
+                                <p class="text-muted small mb-0">Messages</p>
+                            </div>
+                            <i class="bi bi-chat-dots text-info fs-2"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPCOMING APPOINTMENTS with VIDEO CONSULTATION CONTROL -->
+        <div class="card table-card mb-5">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fs-5"><i class="bi bi-calendar-check me-2 text-primary"></i>Today's Appointments</span>
+                <span class="badge bg-primary-soft text-primary px-3 py-2 rounded-pill">5 Scheduled</span>
+            </div>
+            <div class="card-body">
+                <div id="appointmentsLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary"></div>
+                    <p class="mt-3 text-muted">Loading appointments...</p>
+                </div>
+                <div id="appointmentsContainer" class="d-none">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Patient</th>
+                                    <th>Reason</th>
+                                    <th>Status</th>
+                                    <th>Meeting</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointmentsTableBody">
+                                <!-- Appointments will be loaded here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="noAppointments" class="text-center py-5 d-none">
+                    <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
+                    <p class="mt-3 text-muted">No appointments scheduled for today</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card table-card mb-5">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span class="fs-5"><i class="bi bi-person-lines-fill me-2 text-primary"></i>Patient Registry</span>
+                <div class="input-group w-auto">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-pill"><i class="bi bi-search text-muted"></i></span>
+                    <input type="search" class="form-control border-start-0 rounded-end-pill" placeholder="Search ID or Name...">
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Vitals Check</th>
+                                <th>Last Visit</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="fw-bold">P-1001</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-primary-soft text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size: 0.8rem;">RK</div>
+                                        Ramesh Kumar
+                                    </div>
+                                </td>
+                                <td><span class="text-danger small fw-bold">B+ | Glucose High</span></td>
+                                <td class="text-muted">Jan 25, 2026</td>
+                                <td><span class="badge bg-success-soft text-success rounded-pill px-3">Stable</span></td>
+                                <td class="text-end">
+                                    <button class="btn btn-light btn-sm btn-modern me-1" onclick="window.location.href='profile.html?patientId=1001'">View</button>
+                                    <button class="btn btn-danger btn-sm btn-modern" onclick="startVideoCallWithPatient('1001', 'Ramesh Kumar')" title="Video Call">
+                                        <i class="bi bi-camera-video"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-bold">P-1002</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-info-soft text-info rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size: 0.8rem;">SD</div>
+                                        Sunita Devi
+                                    </div>
+                                </td>
+                                <td><span class="text-muted small">O+ | Normal</span></td>
+                                <td class="text-muted">Jan 23, 2026</td>
+                                <td><span class="badge bg-warning-soft text-warning rounded-pill px-3">Review</span></td>
+                                <td class="text-end">
+                                    <button class="btn btn-light btn-sm btn-modern me-1" onclick="window.location.href='profile.html?patientId=1002'">View</button>
+                                    <button class="btn btn-danger btn-sm btn-modern" onclick="startVideoCallWithPatient('1002', 'Sunita Devi')" title="Video Call">
+                                        <i class="bi bi-camera-video"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 text-center">
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 p-3">
+                    <div class="card-body">
+                        <div class="bg-danger text-white rounded-4 p-3 d-inline-block mb-3">
+                            <i class="bi bi-camera-video fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold">Video Consultation</h6>
+                        <p class="text-muted small">Start online consultation</p>
+                        <button class="btn btn-danger btn-sm text-white w-100 rounded-pill" onclick="startVideoCall()">Start Call</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 p-3">
+                    <div class="card-body">
+                        <div class="bg-warning-soft text-warning rounded-4 p-3 d-inline-block mb-3">
+                            <i class="bi bi-clipboard-pulse fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold">Review Reports</h6>
+                        <p class="text-muted small">8 Lab results pending</p>
+                        <a href="#" class="btn btn-warning btn-sm text-white w-100 rounded-pill">Open</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 p-3">
+                    <div class="card-body">
+                        <div class="bg-success-soft text-success rounded-4 p-3 d-inline-block mb-3">
+                            <i class="bi bi-prescription2 fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold">E-Prescription</h6>
+                        <p class="text-muted small">Digital pharmacy order</p>
+                        <a href="#" class="btn btn-success btn-sm text-white w-100 rounded-pill">Create</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 p-3">
+                    <div class="card-body">
+                        <div class="bg-primary-soft text-primary rounded-4 p-3 d-inline-block mb-3">
+                            <i class="bi bi-chat-left-dots fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold">Messages</h6>
+                        <p class="text-muted small">12 New inquiries</p>
+                        <a href="#" class="btn btn-primary btn-sm text-white w-100 rounded-pill">Reply</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card dashboard-card h-100 p-3">
+                    <div class="card-body">
+                        <div class="bg-info-soft text-info rounded-4 p-3 d-inline-block mb-3">
+                            <i class="bi bi-clock-history fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold">Medical History</h6>
+                        <p class="text-muted small">Unified EHR access</p>
+                        <a href="#" class="btn btn-info btn-sm text-white w-100 rounded-pill">Search</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="patientHistoryModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0" style="border-radius: 25px;">
+                <div class="modal-header border-0 p-4 pb-0">
+                    <h5 class="fw-bold"><i class="bi bi-person-circle me-2"></i> Clinical Record</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4" id="patient-history-content">
+                    </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Video Call Room ID Modal -->
+    <div class="modal fade" id="videoCallModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0" style="border-radius: 20px;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="fw-bold text-primary">
+                        <i class="bi bi-camera-video me-2"></i>Start Video Consultation
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 mb-3" style="background: #e3f2fd;">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <small>Share the Room ID or link below with <strong id="patientNameDisplay"></strong></small>
+                    </div>
+
+                    <!-- Room ID Section -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Room ID:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-lg" id="roomIdDisplay" readonly>
+                            <button class="btn btn-primary" onclick="copyRoomId()" title="Copy Room ID">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Patient Link Section -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Patient Join Link:</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="patientLinkDisplay" readonly>
+                            <button class="btn btn-success" onclick="copyPatientLink()" title="Copy Link">
+                                <i class="bi bi-link-45deg"></i> Copy
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sharing Options -->
+                    <div class="d-grid gap-2 mt-4">
+                        <button class="btn btn-outline-primary" onclick="shareViaSMS()">
+                            <i class="bi bi-chat-dots me-2"></i>Share via SMS
+                        </button>
+                        <button class="btn btn-outline-success" onclick="shareViaWhatsApp()">
+                            <i class="bi bi-whatsapp me-2"></i>Share via WhatsApp
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="printRoomDetails()">
+                            <i class="bi bi-printer me-2"></i>Print Details
+                        </button>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Start Call Button -->
+                    <div class="d-grid">
+                        <button class="btn btn-danger btn-lg" onclick="joinVideoCall()">
+                            <i class="bi bi-camera-video-fill me-2"></i>Start Call & Wait for Patient
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer container text-center">
+        <hr class="opacity-10 mb-4">
+        <p class="mb-1">&copy; 2026 Health Nova. Digital Integrity & Care.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="#" class="text-decoration-none text-muted small">Support</a>
+            <a href="#" class="text-decoration-none text-muted small">Privacy Policy</a>
+            <a href="#" class="text-decoration-none text-muted small">Terms</a>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/i18n.js"></script>
+    <script>
+        async function viewPatientHistory(id) {
+            const modal = new bootstrap.Modal(document.getElementById('patientHistoryModal'));
+            const container = document.getElementById('patient-history-content');
+            container.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-3">Fetching EHR...</p></div>`;
+            modal.show();
+            // Simulating API response
+            setTimeout(() => {
+                container.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-6"><div class="p-3 bg-light rounded-4"><small class="text-muted d-block">BLOOD GROUP</small><span class="fw-bold text-danger">B+</span></div></div>
+                        <div class="col-6"><div class="p-3 bg-light rounded-4"><small class="text-muted d-block">AGE</small><span class="fw-bold">45 Years</span></div></div>
+                        <div class="col-12 mt-4"><h6>Timeline</h6><div class="border-start ps-3 py-2 ms-2"><p class="mb-1 small fw-bold text-primary">Jan 25, 2026</p><p class="small">Follow-up: Uncontrolled Diabetes. Prescribed Metformin.</p></div></div>
+                    </div>`;
+            }, 800);
+        }
+
+        function logout() {
+            window.location.href = '/login.html';
+        }
+
+        // Global variables for video call
+        let currentRoomId = '';
+        let currentVideoUrl = '';
+        let currentPatientName = '';
+        let currentPatientLink = '';
+
+        function startVideoCall() {
+            // Generate a unique room ID
+            const roomId = 'room_' + Math.random().toString(36).substr(2, 9);
+            const doctorName = 'Dr. Priya Sharma';
+            
+            // Open video call page with doctor parameters
+            window.location.href = `../patient/video-call.html?room=${roomId}&type=doctor&name=${encodeURIComponent(doctorName)}`;
+        }
+
+        function startVideoCallWithPatient(patientId, patientName) {
+            // Use patient ID as part of room identifier for easy reconnection
+            const roomId = 'consultation_' + patientId + '_' + Date.now();
+            const doctorName = 'Dr. Priya Sharma';
+            
+            // Build URLs
+            const videoUrl = `../patient/video-call.html?room=${roomId}&type=doctor&name=${encodeURIComponent(doctorName)}`;
+            const patientLink = `${window.location.origin}/patient/video-call.html?room=${roomId}&type=patient&name=${encodeURIComponent(patientName)}`;
+            
+            // Store in global variables
+            currentRoomId = roomId;
+            currentVideoUrl = videoUrl;
+            currentPatientName = patientName;
+            currentPatientLink = patientLink;
+            
+            // Update modal content
+            document.getElementById('patientNameDisplay').textContent = patientName;
+            document.getElementById('roomIdDisplay').value = roomId;
+            document.getElementById('patientLinkDisplay').value = patientLink;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('videoCallModal'));
+            modal.show();
+        }
+
+        function copyRoomId() {
+            const roomIdInput = document.getElementById('roomIdDisplay');
+            roomIdInput.select();
+            roomIdInput.setSelectionRange(0, 99999); // For mobile devices
+            navigator.clipboard.writeText(roomIdInput.value);
+            
+            // Show feedback
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+            }, 2000);
+        }
+
+        function copyPatientLink() {
+            const linkInput = document.getElementById('patientLinkDisplay');
+            linkInput.select();
+            linkInput.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(linkInput.value);
+            
+            // Show feedback
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+            }, 2000);
+        }
+
+        function shareViaSMS() {
+            const message = `Hello ${currentPatientName},\n\nDr. Priya Sharma has invited you for a video consultation.\n\nRoom ID: ${currentRoomId}\n\nJoin here: ${currentPatientLink}`;
+            
+            // On mobile, this will open SMS app
+            window.location.href = `sms:?body=${encodeURIComponent(message)}`;
+        }
+
+        function shareViaWhatsApp() {
+            const message = `🏥 *Video Consultation Invitation*\n\nHello ${currentPatientName},\n\nDr. Priya Sharma has invited you for a video consultation.\n\n🔑 *Room ID:* ${currentRoomId}\n\n🔗 *Join Link:*\n${currentPatientLink}\n\nClick the link to join the consultation.`;
+            
+            // Open WhatsApp with pre-filled message
+            window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+        }
+
+        function printRoomDetails() {
+            const printContent = `
+                <html>
+                <head>
+                    <title>Video Consultation Details</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 40px; }
+                        h1 { color: #1e88e5; }
+                        .info { background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                        .label { font-weight: bold; color: #666; }
+                        .value { font-size: 1.2em; color: #333; margin-bottom: 15px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>🏥 Video Consultation Details</h1>
+                    <div class="info">
+                        <p class="label">Doctor:</p>
+                        <p class="value">Dr. Priya Sharma</p>
+                        
+                        <p class="label">Patient:</p>
+                        <p class="value">${currentPatientName}</p>
+                        
+                        <p class="label">Room ID:</p>
+                        <p class="value">${currentRoomId}</p>
+                        
+                        <p class="label">Patient Join Link:</p>
+                        <p class="value" style="word-break: break-all;">${currentPatientLink}</p>
+                        
+                        <p class="label">Instructions:</p>
+                        <ol>
+                            <li>Share the Room ID or link with the patient</li>
+                            <li>Patient should click the link or enter the Room ID in the patient portal</li>
+                            <li>Both doctor and patient must allow camera and microphone access</li>
+                            <li>Ensure stable internet connection for best quality</li>
+                        </ol>
+                    </div>
+                    <p><small>Generated on: ${new Date().toLocaleString()}</small></p>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        function joinVideoCall() {
+            // Close the modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('videoCallModal'));
+            modal.hide();
+            
+            // Open video call in new tab
+            window.open(currentVideoUrl, '_blank');
+        }
+        
+        // Chatbot toggle function
+        function toggleChatbot() {
+            const widget = document.getElementById('chatbotWidget');
+            if (widget) {
+                widget.style.display = widget.style.display === 'none' ? 'flex' : 'none';
+            }
+        }
+
+        // ========================================
+        // VIDEO CONSULTATION - DOCTOR CONTROLLED
+        // ========================================
+
+        /**
+         * Load doctor's appointments for today
+         * Shows appointments with Start Consultation buttons
+         */
+        async function loadAppointments() {
+            const token = localStorage.getItem('token');
+            
+            if (!token) {
+                console.warn('No token found');
+                showNoAppointments();
+                return;
+            }
+            
+            try {
+                // Get today's scheduled appointments
+                const appointments = await fetchMyAppointments({
+                    status: 'scheduled',
+                    upcoming: true
+                });
+                
+                const loading = document.getElementById('appointmentsLoading');
+                const container = document.getElementById('appointmentsContainer');
+                const noAppointments = document.getElementById('noAppointments');
+                const tableBody = document.getElementById('appointmentsTableBody');
+                
+                loading.classList.add('d-none');
+                
+                if (appointments.length === 0) {
+                    noAppointments.classList.remove('d-none');
+                    return;
+                }
+                
+                // Filter today's appointments
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                
+                const todayAppointments = appointments.filter(apt => {
+                    const aptDate = new Date(apt.appointment_date);
+                    return aptDate >= today && aptDate < tomorrow;
+                });
+                
+                if (todayAppointments.length === 0) {
+                    noAppointments.classList.remove('d-none');
+                    return;
+                }
+                
+                // Render appointments
+                tableBody.innerHTML = todayAppointments.map(apt => {
+                    const aptDate = new Date(apt.appointment_date);
+                    const timeStr = aptDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    
+                    // Determine button state based on meeting_status
+                    let actionButton = '';
+                    let meetingStatusBadge = '';
+                    
+                    if (apt.meeting_status === 'not_started') {
+                        actionButton = `
+                            <button class="btn btn-danger btn-sm text-white" onclick="startConsultation(${apt.id})">
+                                <i class="bi bi-camera-video-fill me-1"></i>Start Consultation
+                            </button>
+                        `;
+                        meetingStatusBadge = '<span class="badge bg-secondary">Not Started</span>';
+                    } else if (apt.meeting_status === 'live') {
+                        actionButton = `
+                            <button class="btn btn-success btn-sm text-white" onclick="startConsultation(${apt.id})">
+                                <i class="bi bi-box-arrow-in-right me-1"></i>Rejoin
+                            </button>
+                        `;
+                        meetingStatusBadge = '<span class="badge bg-success">🔴 Live</span>';
+                    } else {
+                        // ended
+                        actionButton = `
+                            <button class="btn btn-outline-secondary btn-sm" disabled>
+                                <i class="bi bi-check-circle me-1"></i>Completed
+                            </button>
+                        `;
+                        meetingStatusBadge = '<span class="badge bg-secondary">Ended</span>';
+                    }
+                    
+                    return `
+                        <tr>
+                            <td class="fw-semibold">${timeStr}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="bg-primary-soft text-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width:32px; height:32px; font-size: 0.8rem;">
+                                        ${getInitials(apt.patient_name || 'Patient')}
+                                    </div>
+                                    ${apt.patient_name || 'Patient'}
+                                </div>
+                            </td>
+                            <td class="text-muted small">${apt.reason || 'General consultation'}</td>
+                            <td><span class="badge bg-primary-soft text-primary rounded-pill px-3">${apt.status}</span></td>
+                            <td>${meetingStatusBadge}</td>
+                            <td class="text-end">
+                                ${actionButton}
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+                
+                container.classList.remove('d-none');
+                
+            } catch (error) {
+                console.error('Error loading appointments:', error);
+                showNoAppointments();
+            }
+        }
+
+        function getInitials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        }
+
+        function showNoAppointments() {
+            document.getElementById('appointmentsLoading').classList.add('d-none');
+            document.getElementById('noAppointments').classList.remove('d-none');
+        }
+
+        // Load appointments on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAppointments();
+        });
+    </script>
+    
+    <!-- Include Video Consultation Manager -->
+    <script src="../js/video-consultation.js"></script>
+    
+    <!-- Chatbot Widget -->
+    <div id="chatbotWidget" class="chatbot-widget" style="display: none;">
+        <div class="chatbot-header">
+            <div>
+                <i class="bi bi-robot"></i>
+                <span>Health Nova Assistant</span>
+            </div>
+            <button class="btn-close-chat" onclick="toggleChatbot()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages"></div>
+        <div class="chatbot-input">
+            <form id="chatForm">
+                <input type="text" id="chatInput" placeholder="Type your message..." autocomplete="off">
+                <button type="submit"><i class="bi bi-send-fill"></i></button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Razorpay Checkout Script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    
+    <!-- Razorpay Integration -->
+    <script src="../js/razorpay-integration.js"></script>
+    
+    <!-- Chatbot Integration -->
+    <script src="../js/chatbot-integration.js"></script>
+    
+    <style>
+        .chatbot-widget { position: fixed; bottom: 20px; right: 20px; width: 380px; max-width: 90vw; height: 500px; background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); display: flex; flex-direction: column; z-index: 1000; overflow: hidden; }
+        .chatbot-header { background: linear-gradient(135deg, #0062ff 0%, #00d2ff 100%); color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+        .chatbot-header i { margin-right: 8px; font-size: 1.2rem; }
+        .btn-close-chat { background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: 0.3s; }
+        .btn-close-chat:hover { background: rgba(255,255,255,0.2); }
+        .chatbot-messages { flex: 1; overflow-y: auto; padding: 20px; background: #f8fafc; }
+        .chatbot-input { padding: 16px; background: white; border-top: 1px solid #e2e8f0; }
+        .chatbot-input form { display: flex; gap: 10px; }
+        .chatbot-input input { flex: 1; padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 24px; outline: none; font-size: 14px; }
+        .chatbot-input input:focus { border-color: #0062ff; }
+        .chatbot-input button { background: #0062ff; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        .chatbot-input button:hover { background: #0052d9; transform: scale(1.05); }
+    </style>
+</body>
+</html>

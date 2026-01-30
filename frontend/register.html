@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Register for Health Nova">
+    <title>Sign Up - Health Nova</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="/js/i18n.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+        }
+
+        .register-container {
+            display: flex;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        /* Left Side - Welcome Panel */
+        .register-left {
+            flex: 1;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .register-left::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.2); opacity: 0.3; }
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .logo-text {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            letter-spacing: 2px;
+        }
+
+        .welcome-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .welcome-description {
+            font-size: 1rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+
+        .btn-signin-link {
+            padding: 14px 50px;
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-signin-link:hover {
+            background: white;
+            color: #1e88e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255,255,255,0.3);
+        }
+
+        /* Decorative Elements */
+        .decorative-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+
+        .circle-1 {
+            width: 150px;
+            height: 150px;
+            top: 10%;
+            left: 10%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .circle-2 {
+            width: 100px;
+            height: 100px;
+            bottom: 20%;
+            left: 15%;
+            animation: float 8s ease-in-out infinite reverse;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        /* Right Side - Registration Form */
+        .register-right {
+            flex: 1;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .register-form-wrapper {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px 0;
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .register-header h2 {
+            color: #333;
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .register-header p {
+            color: #888;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+
+        /* Role Selection */
+        .role-selection {
+            margin-bottom: 30px;
+        }
+
+        .role-selection label {
+            display: block;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .role-options {
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .role-option {
+            flex: 1;
+        }
+
+        .role-option input[type="radio"] {
+            display: none;
+        }
+
+        .role-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .role-label:hover {
+            border-color: #1e88e5;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(30, 136, 229, 0.2);
+        }
+
+        .role-option input[type="radio"]:checked + .role-label {
+            border-color: #1e88e5;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+
+        .role-label i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: #1e88e5;
+        }
+
+        .role-label span {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: none;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease;
+            background: transparent;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-bottom-color: #1e88e5;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+            font-weight: 300;
+        }
+
+        .form-group small {
+            display: block;
+            color: #888;
+            font-size: 0.75rem;
+            margin-top: 5px;
+        }
+
+        .terms-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .terms-checkbox input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .terms-checkbox label {
+            font-size: 0.85rem;
+            color: #666;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+
+        .terms-checkbox a {
+            color: #1e88e5;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .terms-checkbox a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-signup {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 136, 229, 0.3);
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 136, 229, 0.4);
+        }
+
+        .social-register {
+            text-align: center;
+            margin-top: 25px;
+        }
+
+        .social-register p {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 15px;
+        }
+
+        .social-icons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .social-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #e0e0e0;
+        }
+
+        .social-icon:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .social-icon i {
+            font-size: 1.3rem;
+        }
+
+        .social-icon.google {
+            color: #db4437;
+        }
+
+        .social-icon.facebook {
+            color: #4267B2;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .register-container {
+                flex-direction: column;
+            }
+
+            .register-left {
+                display: none;
+            }
+
+            .register-right {
+                padding: 30px 20px;
+            }
+
+            .role-options {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .register-header h2 {
+                font-size: 1.5rem;
+            }
+
+            .form-group input {
+                padding: 12px 14px;
+            }
+
+            .btn-signup {
+                padding: 14px;
+                font-size: 0.95rem;
+            }
+
+            .role-label {
+                padding: 15px 8px;
+            }
+
+            .role-label i {
+                font-size: 1.5rem;
+            }
+
+            .role-label span {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <!-- Left Side - Welcome Panel -->
+        <div class="register-left">
+            <a href="landing.html" class="btn btn-link position-absolute top-0 start-0 m-3 text-white">
+                <i class="bi bi-arrow-left"></i> <span data-i18n="back">Back</span>
+            </a>
+            <div class="dropdown position-absolute top-0 end-0 m-3">
+                <button class="btn btn-light btn-sm dropdown-toggle language-dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-translate me-1"></i><span data-i18n="language">Language</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item language-option" href="#" data-lang="en">English</a></li>
+                    <li><a class="dropdown-item language-option" href="#" data-lang="hi">हिन्दी</a></li>
+                    <li><a class="dropdown-item language-option" href="#" data-lang="mr">मराठी</a></li>
+                </ul>
+            </div>
+            <div class="decorative-circle circle-1"></div>
+            <div class="decorative-circle circle-2"></div>
+            
+            <div class="welcome-content">
+                <div class="logo-text">
+                    <i class="bi bi-heart-pulse-fill"></i> HEALTH NOVA
+                </div>
+                <h1 class="welcome-title" data-i18n="register_title">Hello, Friend!</h1>
+                <p class="welcome-description">
+                    Enter your personal details and<br>
+                    start your journey with us today.
+                </p>
+                <a href="login.html" class="btn-signin-link" data-i18n="signin">Sign In</a>
+            </div>
+
+            <svg class="illustration" style="position: absolute; bottom: -50px; right: -50px; width: 300px; height: 300px; opacity: 0.1;" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                <path fill="rgba(255,255,255,0.1)" d="M45.7,-57.8C57.5,-47.3,64.5,-31.7,67.4,-15.3C70.3,1.1,69.1,18.3,61.5,32.1C53.9,45.9,39.9,56.3,24.3,61.5C8.7,66.7,-8.5,66.7,-24.3,61.5C-40.1,56.3,-54.5,45.9,-63.1,31.7C-71.7,17.5,-74.5,-0.1,-71.3,-16.9C-68.1,-33.7,-59,-49.7,-46.3,-59.9C-33.6,-70.1,-16.8,-74.5,-0.1,-74.4C16.6,-74.3,33.9,-68.3,45.7,-57.8Z" transform="translate(100 100)" />
+            </svg>
+        </div>
+
+        <!-- Right Side - Registration Form -->
+        <div class="register-right">
+            <div class="register-form-wrapper">
+                <div class="register-header">
+                    <h2 data-i18n="register">SIGN UP</h2>
+                    <p data-i18n="register_title">Create your account to get started</p>
+                </div>
+
+                <form id="registerForm">
+                    <!-- Role Selection -->
+                    <div class="role-selection">
+                        <label data-i18n="role">Select Your Role</label>
+                        <div class="role-options">
+                            <div class="role-option">
+                                <input type="radio" name="role" id="rolePatient" value="patient" checked>
+                                <label for="rolePatient" class="role-label">
+                                    <i class="bi bi-person-fill"></i>
+                                    <span data-i18n="patient">Patient</span>
+                                </label>
+                            </div>
+                            <div class="role-option">
+                                <input type="radio" name="role" id="roleDoctor" value="doctor">
+                                <label for="roleDoctor" class="role-label">
+                                    <i class="bi bi-person-badge-fill"></i>
+                                    <span data-i18n="doctor">Doctor</span>
+                                </label>
+                            </div>
+                            <div class="role-option">
+                                <input type="radio" name="role" id="roleLab" value="lab">
+                                <label for="roleLab" class="role-label">
+                                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                                    <span data-i18n="lab_tech">Lab Tech</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label for="fullName" data-i18n="full_name">Full Name</label>
+                        <input 
+                            type="text" 
+                            id="fullName" 
+                            name="fullName"
+                            placeholder="Enter your full name"
+                            required
+                        >
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label for="email" data-i18n="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email"
+                            placeholder="yourname@example.com"
+                            required
+                        >
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="form-group">
+                        <label for="phoneNumber" data-i18n="phone_number">Phone Number</label>
+                        <input 
+                            type="tel" 
+                            id="phoneNumber" 
+                            name="phoneNumber"
+                            placeholder="Enter your 10-digit phone number"
+                            pattern="[0-9]{10}"
+                            maxlength="10"
+                            required
+                        >
+                        <small>This will be used for account verification</small>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label for="password" data-i18n="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password"
+                            placeholder="Create a strong password"
+                            minlength="6"
+                            required
+                        >
+                        <small>Minimum 6 characters</small>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label for="confirmPassword" data-i18n="confirm_password">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword"
+                            placeholder="Re-enter your password"
+                            minlength="6"
+                            required
+                        >
+                    </div>
+
+                    <!-- Terms and Conditions -->
+                    <div class="terms-checkbox">
+                        <input type="checkbox" id="termsCheck" required>
+                        <label for="termsCheck">
+                            I agree to the <a href="#terms">Terms and Conditions</a> and <a href="#privacy">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-signup" data-i18n="create_account">Create Account</button>
+
+                    <div class="social-register">
+                        <p>or Sign Up using</p>
+                        <div class="social-icons">
+                            <div class="social-icon google">
+                                <i class="bi bi-google"></i>
+                            </div>
+                            <div class="social-icon facebook">
+                                <i class="bi bi-facebook"></i>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Form validation and submission
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+            
+            const formData = {
+                role: document.querySelector('input[name="role"]:checked').value,
+                full_name: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone_number: document.getElementById('phoneNumber').value,
+                password: password
+            };
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.status === 'success') {
+                    // Registration successful
+                    alert('Registration successful! Please login with your credentials.');
+                    window.location.href = 'login.html';
+                } else {
+                    // Registration failed
+                    alert(data.message || 'Registration failed. Please try again.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Create Account';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                alert('Unable to connect to server. Please ensure the backend is running.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+
+        // Social registration handlers
+        document.querySelector('.social-icon.google').addEventListener('click', function() {
+            console.log('Google registration clicked');
+            alert('Google OAuth will be integrated with backend');
+        });
+
+        document.querySelector('.social-icon.facebook').addEventListener('click', function() {
+            console.log('Facebook registration clicked');
+            alert('Facebook OAuth will be integrated with backend');
+        });
+
+        // Password strength indicator (optional enhancement)
+        document.getElementById('password').addEventListener('input', function() {
+            const password = this.value;
+            const strength = password.length >= 8 ? 'strong' : password.length >= 6 ? 'medium' : 'weak';
+            // You can add visual feedback here
+        });
+    </script>
+</body>
+</html>

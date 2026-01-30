@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Nova | Advanced Diagnostic Ecosystem</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="./js/i18n.js"></script>
+    
+    <style>
+        :root {
+            --primary: #0062ff;
+            --secondary: #00d2ff;
+            --dark: #0f172a;
+            --gradient: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(0, 98, 255, 0.8) 100%);
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; overflow-x: hidden; scroll-behavior: smooth; }
+
+        /* --- NAVIGATION --- */
+        .navbar { background: white; border-bottom: 1px solid #e2e8f0; padding: 15px 0; }
+        .navbar-brand { font-weight: 800; font-size: 1.6rem; color: var(--primary) !important; }
+        .nav-link { font-weight: 600; color: #475569 !important; padding: 0 15px !important; }
+
+        .btn-login-nav {
+            background: var(--primary);
+            color: white !important;
+            font-weight: 700;
+            border-radius: 50px;
+            padding: 8px 30px !important;
+            border: none;
+            transition: 0.3s;
+        }
+
+        /* --- HERO SECTION --- */
+        .hero-banner {
+            background-image: var(--gradient), url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1920&q=80');
+            background-size: cover; background-position: center;
+            padding: 120px 0 160px; color: white; clip-path: ellipse(150% 100% at 50% 0%);
+        }
+
+        /* --- CENTRAL VOICE HUB --- */
+        .voice-action-box {
+            margin-top: -60px;
+            background: white;
+            border-radius: 100px;
+            padding: 20px 40px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+            text-align: center;
+            border: 2px solid var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        /* --- ECOSYSTEM CARDS --- */
+        .ecosystem-card {
+            background: white; border-radius: 24px; padding: 40px; 
+            border: 1px solid #f1f5f9; height: 100%; transition: 0.3s;
+            text-align: center;
+        }
+        .ecosystem-card:hover { transform: translateY(-10px); border-color: var(--primary); box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
+        .feature-icon { font-size: 3rem; color: var(--primary); margin-bottom: 20px; }
+
+        /* --- FEATURE IMAGES --- */
+        .feature-img-wrapper {
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .feature-img { width: 100%; transition: transform 0.5s ease; }
+        .feature-img:hover { transform: scale(1.05); }
+
+        .footer-main { background: #111827; color: #9ca3af; padding: 70px 0 30px; }
+
+        .voice-bot-fab {
+            position: fixed; bottom: 30px; right: 30px; width: 75px; height: 75px;
+            background: var(--primary); color: white; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; box-shadow: 0 10px 30px rgba(0,98,255,0.4);
+            z-index: 1000; animation: pulse 2s infinite; cursor: pointer;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 98, 255, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 98, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 98, 255, 0); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">HealthNova</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#" data-i18n="home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about" data-i18n="about">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#ecosystem" data-i18n="services">Services</a></li>
+                    <li class="nav-item"><a class="nav-link" href="patient-chatbot.html"><i class="bi bi-chat-dots-fill text-primary me-1"></i><span data-i18n="health_assistant">Health Assistant</span></a></li>
+                    <li class="nav-item dropdown ms-lg-3">
+                        <button class="btn btn-light rounded-pill dropdown-toggle fw-bold language-dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-translate text-primary me-2"></i><span data-i18n="language">Language</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                            <li><a class="dropdown-item language-option" href="#" data-lang="en">English</a></li>
+                            <li><a class="dropdown-item language-option" href="#" data-lang="hi">हिन्दी</a></li>
+                            <li><a class="dropdown-item language-option" href="#" data-lang="mr">मराठी</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a href="login.html" class="nav-link btn-login-nav ms-3" data-i18n="login">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-banner">
+        <div class="container text-center" data-aos="fade-up">
+            <h1 class="display-3 fw-800 mb-4" id="h-title"><span data-i18n="hero_title">Your Health,</span> <br><strong><span data-i18n="hero_subtitle">In Your Voice.</span></strong></h1>
+            <p class="lead mb-0 opacity-90" id="h-desc" data-i18n="hero_desc">Digital healthcare records for rural India. Speak your symptoms, AI understands.</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="voice-action-box" data-aos="zoom-in">
+                    <h4 class="fw-bold mb-0 text-dark" data-i18n="try_voice_booking">Try AI Voice Booking:</h4>
+                    <button class="btn btn-primary btn-lg rounded-pill px-5 py-2 fw-bold shadow" onclick="alert('Listening...')">
+                        <i class="bi bi-mic-fill me-2"></i> <span data-i18n="start_speaking">Start Speaking</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="py-5 mt-5" id="ecosystem">
+        <div class="container">
+            <div class="text-center mb-5" data-aos="fade-up">
+                <h2 class="fw-bold display-6" data-i18n="platform_ecosystem">Our Platform Ecosystem</h2>
+                <p class="text-muted" data-i18n="platform_desc">Direct portals designed for Patients, Doctors, and Labs.</p>
+            </div>
+            <div class="row g-4 text-center">
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+                    <div class="ecosystem-card shadow-sm">
+                        <i class="bi bi-person-heart feature-icon"></i>
+                        <h4 class="fw-bold" data-i18n="patient_portal">Patient Portal</h4>
+                        <p class="text-muted" data-i18n="patient_portal_desc">Book appointments, view lab reports, and consult doctors online with multilingual support.</p>
+                        <a href="patient/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+                    <div class="ecosystem-card shadow-sm">
+                        <i class="bi bi-person-workspace feature-icon"></i>
+                        <h4 class="fw-bold" data-i18n="doctor_desk">Doctor's Desk</h4>
+                        <p class="text-muted" data-i18n="doctor_desk_desc">Secure portal for clinicians to track patient trends and pathology data instantly.</p>
+                        <a href="doctor/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+                    <div class="ecosystem-card shadow-sm">
+                        <i class="bi bi-truck-flatbed feature-icon"></i>
+                        <h4 class="fw-bold" data-i18n="lab_hub">Lab Technician Hub</h4>
+                        <p class="text-muted" data-i18n="lab_hub_desc">Advanced tools for laboratory technicians to manage rural sample collection logistics.</p>
+                        <a href="lab/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-5 bg-white" id="about">
+        <div class="container">
+            
+            <div class="row align-items-center mb-5 g-5" data-aos="fade-right">
+                <div class="col-lg-6">
+                    <h2 class="fw-bold display-6 mb-4" data-i18n="empowering_clinical">Empowering Clinical Decisions</h2>
+                    <p class="text-muted lead mb-4" data-i18n="empowering_desc">We provide doctors with a unified dashboard to track patient history and diagnostic progress across 500+ rural locations.</p>
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-4"><i class="bi bi-translate text-primary me-2"></i> <span data-i18n="multilingual_reports">Multilingual Reports</span></div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="p-3 border rounded-4"><i class="bi bi-graph-up text-primary me-2"></i> <span data-i18n="ai_trends">AI-Integrated Trends</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="feature-img-wrapper">
+                        
+                        <img src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80" alt="Clinical Dashboard" class="feature-img">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row align-items-center flex-row-reverse g-5 py-5" data-aos="fade-left">
+                <div class="col-lg-6">
+                    <h2 class="fw-bold display-6 mb-4" data-i18n="advanced_lab">Advanced Lab Logistics</h2>
+                    <p class="text-muted lead mb-4" data-i18n="advanced_lab_desc">Our platform streamlines the connection between rural collection centers and high-end diagnostic hubs through automated GPS tracking.</p>
+                    <div class="p-3 bg-light rounded-4 border-start border-primary border-4">
+                        <p class="mb-0 fw-bold" data-i18n="optimized_transport">Optimized sample transportation with temperature monitoring.</p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="feature-img-wrapper">
+                        
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80" alt="Lab Logistics" class="feature-img">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer-main">
+        <div class="container text-center">
+            <h3 class="text-white fw-800 mb-4">HealthNova Diagnostics</h3>
+            <p class="opacity-50 small" data-i18n="copyright">&copy; 2026 Health Nova. Quality Healthcare Access For All.</p>
+        </div>
+    </footer>
+
+    <div class="voice-bot-fab" onclick="window.location.href='login.html'" title="Get Started">
+        <i class="bi bi-arrow-right-circle-fill"></i>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        // Initialize Scroll Reveal
+        AOS.init({ duration: 1000, once: true });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

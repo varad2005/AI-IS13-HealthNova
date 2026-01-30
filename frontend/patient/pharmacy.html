@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medicines - Health Nova</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8f9fa; }
+        .navbar { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 1rem 0; }
+        .search-section { background: white; padding: 30px 0; margin-bottom: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .medicine-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.3s ease; }
+        .medicine-card:hover { transform: translateY(-3px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .badge-discount { background: #4caf50; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
+        .btn-add-cart { background: #1e88e5; color: white; border: none; padding: 8px 20px; border-radius: 20px; }
+        .cart-floating { position: fixed; bottom: 30px; right: 30px; background: #1e88e5; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand text-primary fw-bold" href="dashboard.html">
+                <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="search-section">
+        <div class="container">
+            <h2 class="mb-3"><i class="bi bi-capsule text-primary me-2"></i>Order Medicines</h2>
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg" placeholder="Search for medicines, health products..." id="searchInput">
+                <button class="btn btn-primary" onclick="searchMedicine()"><i class="bi bi-search"></i> Search</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3">Categories</h6>
+                        <div class="list-group list-group-flush">
+                            <a href="#" class="list-group-item list-group-item-action">Pain Relief</a>
+                            <a href="#" class="list-group-item list-group-item-action">Diabetes Care</a>
+                            <a href="#" class="list-group-item list-group-item-action">Vitamins</a>
+                            <a href="#" class="list-group-item list-group-item-action">Heart Care</a>
+                            <a href="#" class="list-group-item list-group-item-action">Personal Care</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-9">
+                <h5 class="mb-4">Popular Medicines</h5>
+                <div id="medicineList">
+                    <!-- Medicine cards will be dynamically generated -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-floating" onclick="viewCart()">
+        <i class="bi bi-cart3 fs-4"></i>
+        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cartCount">0</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const medicines = [
+            { id: 1, name: 'Paracetamol 500mg', company: 'Apollo', price: 45, discount: 20, mrp: 56 },
+            { id: 2, name: 'Dolo 650mg', company: 'Micro Labs', price: 30, discount: 15, mrp: 35 },
+            { id: 3, name: 'Crocin Advance', company: 'GSK', price: 25, discount: 10, mrp: 28 },
+            { id: 4, name: 'Metformin 500mg', company: 'Sun Pharma', price: 120, discount: 25, mrp: 160 },
+            { id: 5, name: 'Vitamin D3 60K', company: 'Mankind', price: 85, discount: 15, mrp: 100 },
+            { id: 6, name: 'Omega-3 Capsules', company: 'HealthKart', price: 450, discount: 30, mrp: 643 }
+        ];
+
+        let cart = [];
+
+        function renderMedicines() {
+            const container = document.getElementById('medicineList');
+            container.innerHTML = medicines.map(med => `
+                <div class="medicine-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h6 class="mb-1">${med.name}</h6>
+                            <p class="text-muted small mb-2">${med.company}</p>
+                            <div>
+                                <span class="text-decoration-line-through text-muted small">₹${med.mrp}</span>
+                                <span class="fw-bold fs-5 text-success ms-2">₹${med.price}</span>
+                                <span class="badge-discount ms-2">${med.discount}% OFF</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <button class="btn-add-cart" onclick="addToCart(${med.id})">
+                                <i class="bi bi-cart-plus me-1"></i> Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const medicine = medicines.find(m => m.id === id);
+            cart.push(medicine);
+            document.getElementById('cartCount').textContent = cart.length;
+            alert(`${medicine.name} added to cart!`);
+        }
+
+        function viewCart() {
+            if (cart.length === 0) {
+                alert('Your cart is empty');
+            } else {
+                alert(`You have ${cart.length} item(s) in cart. Total: ₹${cart.reduce((sum, item) => sum + item.price, 0)}`);
+            }
+        }
+
+        function searchMedicine() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            alert('Searching for: ' + query);
+        }
+
+        document.addEventListener('DOMContentLoaded', renderMedicines);
+    </script>
+</body>
+</html>

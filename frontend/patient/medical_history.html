@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Medical History - Health Nova</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .timeline-container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .patient-header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #1e88e5, #e0e0e0);
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            transform: translateX(5px);
+        }
+
+        .timeline-marker {
+            position: absolute;
+            left: -35px;
+            top: 20px;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            border: 4px solid #1e88e5;
+            z-index: 1;
+        }
+
+        .timeline-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .timeline-header:hover {
+            background: #f8f9fa;
+        }
+
+        .timeline-date {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .timeline-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .timeline-doctor {
+            color: #1e88e5;
+            font-size: 0.95rem;
+        }
+
+        .timeline-content {
+            padding: 20px;
+            display: none;
+        }
+
+        .timeline-content.show {
+            display: block;
+        }
+
+        .status-badge {
+            font-size: 0.85rem;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        .severity-low { background: #e8f5e9; color: #2e7d32; }
+        .severity-medium { background: #fff3e0; color: #f57c00; }
+        .severity-high { background: #ffebee; color: #c62828; }
+        .severity-critical { background: #f3e5f5; color: #6a1b9a; }
+
+        .info-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 8px;
+        }
+
+        .prescription-card {
+            background: #e3f2fd;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #1e88e5;
+        }
+
+        .lab-test-card {
+            background: #f3e5f5;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #9c27b0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold text-primary" href="dashboard.html">
+                <i class="bi bi-heart-pulse-fill"></i> Health Nova
+            </a>
+            <button class="btn btn-outline-secondary" onclick="window.location.href='dashboard.html'">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="timeline-container">
+        <!-- Patient Header -->
+        <div class="patient-header" id="patient-header">
+            <h2 class="mb-4"><i class="bi bi-clipboard2-pulse"></i> My Medical History Timeline</h2>
+            <p class="text-muted mb-0">Complete digital medical record - No physical files needed</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading your medical history...</p>
+        </div>
+
+        <!-- Timeline -->
+        <div class="timeline" id="timeline-container" style="display: none;">
+            <!-- Timeline items will be inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display: none;">
+            <i class="bi bi-inbox"></i>
+            <h4>No Medical History Yet</h4>
+            <p>Your medical visits will appear here once you consult with a doctor.</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Load medical history on page load
+        document.addEventListener('DOMContentLoaded', loadMedicalHistory);
+
+        async function loadMedicalHistory() {
+            try {
+                const response = await fetch('/patient/history/timeline', {
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login.html';
+                        return;
+                    }
+                    throw new Error('Failed to load medical history');
+                }
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    displayMedicalHistory(result.data);
+                }
+            } catch (error) {
+                console.error('Error loading medical history:', error);
+                showError('Unable to load medical history. Please try again.');
+            }
+        }
+
+        function displayMedicalHistory(data) {
+            document.getElementById('loading-state').style.display = 'none';
+            
+            // Display timeline
+            const timeline = data.timeline;
+            
+            if (timeline.length === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                return;
+            }
+            
+            const timelineContainer = document.getElementById('timeline-container');
+            timelineContainer.style.display = 'block';
+            timelineContainer.innerHTML = '';
+            
+            timeline.forEach((visit, index) => {
+                const item = createTimelineItem(visit, index);
+                timelineContainer.appendChild(item);
+            });
+        }
+
+        function createTimelineItem(visit, index) {
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.id = `visit-${visit.visit_id}`;
+            
+            const visitDate = new Date(visit.visit_date);
+            const formattedDate = visitDate.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const severityClass = `severity-${visit.severity || 'medium'}`;
+            const statusBadge = getStatusBadge(visit.status);
+            
+            item.innerHTML = `
+                <div class="timeline-marker"></div>
+                <div class="timeline-header" onclick="toggleContent(${visit.visit_id})">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="timeline-date">${formattedDate}</div>
+                            <div class="timeline-title">${visit.symptoms.substring(0, 80)}${visit.symptoms.length > 80 ? '...' : ''}</div>
+                            <div class="timeline-doctor">
+                                <i class="bi bi-person-badge"></i> ${visit.doctor_name}
+                            </div>
+                        </div>
+                        <div>
+                            ${statusBadge}
+                            ${visit.severity ? `<span class="status-badge ${severityClass} ms-2">${visit.severity}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="timeline-content" id="content-${visit.visit_id}">
+                    ${createTimelineContent(visit)}
+                </div>
+            `;
+            
+            return item;
+        }
+
+        function createTimelineContent(visit) {
+            let content = '';
+            
+            // Symptoms
+            content += `
+                <div class="info-section">
+                    <div class="info-label"><i class="bi bi-clipboard2-pulse"></i> Symptoms</div>
+                    <div>${visit.symptoms}</div>
+                </div>
+            `;
+            
+            // Diagnosis
+            if (visit.diagnosis && visit.diagnosis !== 'Pending') {
+                content += `
+                    <div class="info-section">
+                        <div class="info-label"><i class="bi bi-clipboard-check"></i> Diagnosis</div>
+                        <div>${visit.diagnosis.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            }
+            
+            // Doctor's Notes
+            if (visit.notes) {
+                content += `
+                    <div class="info-section">
+                        <div class="info-label"><i class="bi bi-journal-medical"></i> Doctor's Notes</div>
+                        <div>${visit.notes.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `;
+            }
+            
+            // Prescriptions
+            if (visit.prescriptions && visit.prescriptions.length > 0) {
+                content += `
+                    <div class="info-section">
+                        <div class="info-label"><i class="bi bi-capsule"></i> Prescriptions (${visit.prescriptions.length})</div>
+                `;
+                visit.prescriptions.forEach(rx => {
+                    content += `
+                        <div class="prescription-card">
+                            <strong>${rx.medication_name}</strong> - ${rx.dosage}<br>
+                            <small class="text-muted">
+                                ${rx.frequency}, ${rx.duration}
+                                ${rx.instructions ? `<br>${rx.instructions}` : ''}
+                            </small>
+                        </div>
+                    `;
+                });
+                content += `</div>`;
+            }
+            
+            // Lab Tests
+            if (visit.lab_tests && visit.lab_tests.length > 0) {
+                content += `
+                    <div class="info-section">
+                        <div class="info-label"><i class="bi bi-file-medical"></i> Lab Tests (${visit.lab_tests.length})</div>
+                `;
+                visit.lab_tests.forEach(test => {
+                    content += `
+                        <div class="lab-test-card">
+                            <div class="d-flex justify-content-between">
+                                <strong>${test.test_name}</strong>
+                                <span class="badge bg-${getTestStatusColor(test.status)}">${test.status}</span>
+                            </div>
+                            ${test.result ? `<div class="mt-2"><strong>Result:</strong> ${test.result}</div>` : ''}
+                            ${test.remarks ? `<div class="mt-1"><small class="text-muted">${test.remarks}</small></div>` : ''}
+                        </div>
+                    `;
+                });
+                content += `</div>`;
+            }
+            
+            return content;
+        }
+
+        function toggleContent(visitId) {
+            const content = document.getElementById(`content-${visitId}`);
+            content.classList.toggle('show');
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'open': '<span class="badge bg-info">Open</span>',
+                'in_progress': '<span class="badge bg-warning">In Progress</span>',
+                'completed': '<span class="badge bg-success">Completed</span>',
+                'cancelled': '<span class="badge bg-secondary">Cancelled</span>'
+            };
+            return badges[status] || '';
+        }
+
+        function getTestStatusColor(status) {
+            const colors = {
+                'requested': 'info',
+                'approved': 'primary',
+                'scheduled': 'warning',
+                'completed': 'success',
+                'rejected': 'danger'
+            };
+            return colors[status] || 'secondary';
+        }
+
+        function showError(message) {
+            document.getElementById('loading-state').innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i> ${message}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

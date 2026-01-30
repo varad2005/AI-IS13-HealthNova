@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Consultation Test - Health Nova</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .test-container {
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            max-width: 600px;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #1e88e5;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .test-section h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .badge-patient {
+            background: #e3f2fd;
+            color: #1e88e5;
+        }
+
+        .badge-doctor {
+            background: #e8f5e9;
+            color: #43a047;
+        }
+
+        .btn-test {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-patient {
+            background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+            color: white;
+        }
+
+        .btn-doctor {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            color: white;
+        }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .info-box h4 {
+            color: #e65100;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .info-box ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .room-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .room-input:focus {
+            outline: none;
+            border-color: #1e88e5;
+        }
+
+        .quick-room {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .quick-room button {
+            flex: 1;
+            padding: 8px;
+            background: white;
+            border: 2px solid #1e88e5;
+            color: #1e88e5;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .quick-room button:hover {
+            background: #1e88e5;
+            color: white;
+        }
+
+        code {
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: #d32f2f;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>
+            <i class="bi bi-camera-video-fill"></i>
+            Video Consultation Test
+        </h1>
+        <p class="subtitle">Test WebRTC video calls with two browser windows</p>
+
+        <div class="test-section">
+            <h3>
+                <i class="bi bi-gear-fill" style="color: #1e88e5;"></i>
+                Room Setup
+            </h3>
+            <label style="font-weight: 600; color: #666; margin-bottom: 8px; display: block;">
+                Enter Room ID (or use quick rooms below):
+            </label>
+            <input 
+                type="text" 
+                class="room-input" 
+                id="roomInput" 
+                placeholder="e.g., test123" 
+                value="demo-room"
+            >
+            <div class="quick-room">
+                <button onclick="setRoom('test123')">test123</button>
+                <button onclick="setRoom('demo-room')">demo-room</button>
+                <button onclick="setRoom('consult-' + Date.now())">Random</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>
+                <span class="role-badge badge-patient">1</span>
+                Open Patient Window
+            </h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Click this button in your <strong>current window</strong>:
+            </p>
+            <button class="btn-test btn-patient" onclick="openPatient()">
+                <i class="bi bi-person-fill"></i>
+                Join as Patient
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h3>
+                <span class="role-badge badge-doctor">2</span>
+                Open Doctor Window
+            </h3>
+            <p style="color: #666; margin-bottom: 15px;">
+                Click this button in an <strong>INCOGNITO/PRIVATE window</strong>:
+            </p>
+            <button class="btn-test btn-doctor" onclick="openDoctor()">
+                <i class="bi bi-heart-pulse-fill"></i>
+                Join as Doctor
+            </button>
+        </div>
+
+        <div class="info-box">
+            <h4>
+                <i class="bi bi-info-circle-fill"></i>
+                Testing Instructions
+            </h4>
+            <ol>
+                <li>Click <strong>"Join as Patient"</strong> in this window</li>
+                <li>Open a <strong>new INCOGNITO/PRIVATE window</strong></li>
+                <li>Come back to this test page in the incognito window</li>
+                <li>Click <strong>"Join as Doctor"</strong> in the incognito window</li>
+                <li>Allow camera/microphone permissions in both windows</li>
+                <li>Video call should connect automatically! 🎉</li>
+            </ol>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: #f5f5f5; border-radius: 12px; text-align: center;">
+            <div style="margin-bottom: 15px;">
+                <i class="bi bi-keyboard" style="font-size: 2rem; color: #1e88e5;"></i>
+            </div>
+            <p style="color: #666; font-size: 0.9rem; margin: 0;">
+                <strong>Keyboard Shortcut:</strong><br>
+                Windows: <code>Ctrl + Shift + N</code> (Chrome) or <code>Ctrl + Shift + P</code> (Firefox)<br>
+                Mac: <code>Cmd + Shift + N</code> (Chrome) or <code>Cmd + Shift + P</code> (Firefox)
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function setRoom(roomId) {
+            document.getElementById('roomInput').value = roomId;
+        }
+
+        function openPatient() {
+            const roomId = document.getElementById('roomInput').value.trim();
+            if (!roomId) {
+                alert('Please enter a room ID');
+                return;
+            }
+            
+            const url = `video-call.html?room=${roomId}&type=patient&name=Patient`;
+            window.location.href = url;
+        }
+
+        function openDoctor() {
+            const roomId = document.getElementById('roomInput').value.trim();
+            if (!roomId) {
+                alert('Please enter a room ID');
+                return;
+            }
+            
+            const url = `video-call.html?room=${roomId}&type=doctor&name=Doctor`;
+            window.location.href = url;
+        }
+
+        // Allow Enter key to join as patient
+        document.getElementById('roomInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                openPatient();
+            }
+        });
+    </script>
+</body>
+</html>

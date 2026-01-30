@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Guidance - Test Page</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .ai-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+            max-width: 700px;
+            margin: 50px auto;
+        }
+        .ai-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .ai-icon {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        .response-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+        .disclaimer-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .btn-ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px 30px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ai-card">
+            <div class="ai-header">
+                <i class="bi bi-robot ai-icon"></i>
+                <h2>🤖 AI Health Guidance</h2>
+                <p class="text-muted">Powered by Google Gemini</p>
+            </div>
+
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> This is a test page. In production, this feature is integrated into the patient dashboard.
+            </div>
+
+            <form id="aiForm">
+                <div class="mb-3">
+                    <label for="symptoms" class="form-label">
+                        <i class="bi bi-chat-dots"></i> Describe Your Health Concern
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="symptoms" 
+                        rows="4" 
+                        placeholder="Example: I have fever and headache for 2 days..."
+                        required
+                        minlength="10"
+                        maxlength="1000"
+                    ></textarea>
+                    <small class="text-muted">
+                        Minimum 10 characters, maximum 1000 characters
+                    </small>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-ai w-100">
+                    <i class="bi bi-stars"></i> Get AI Guidance
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2">Getting AI guidance...</p>
+            </div>
+
+            <div class="response-box" id="responseBox">
+                <h5><i class="bi bi-chat-left-text"></i> AI Response</h5>
+                <div id="aiResponse"></div>
+                
+                <div class="disclaimer-box" id="disclaimerBox">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Important Disclaimer:</strong>
+                    <div id="disclaimer"></div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <h6>🧪 Test Instructions:</h6>
+                <ol>
+                    <li>Make sure the Flask server is running (<code>python app.py</code>)</li>
+                    <li>Login as a patient first (or test will fail)</li>
+                    <li>Enter your health concern (minimum 10 characters)</li>
+                    <li>Click "Get AI Guidance"</li>
+                    <li>View the AI-generated response</li>
+                </ol>
+                
+                <div class="alert alert-warning mt-3">
+                    <strong>Authentication Required:</strong> You must be logged in as a patient to use this feature.
+                    <a href="../login.html" class="alert-link">Login here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('aiForm');
+        const loading = document.getElementById('loading');
+        const responseBox = document.getElementById('responseBox');
+        const aiResponse = document.getElementById('aiResponse');
+        const disclaimer = document.getElementById('disclaimer');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const symptoms = document.getElementById('symptoms').value.trim();
+
+            if (symptoms.length < 10) {
+                alert('Please provide more details (at least 10 characters)');
+                return;
+            }
+
+            // Show loading
+            loading.style.display = 'block';
+            responseBox.style.display = 'none';
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/patient/ai-guidance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // Important for session cookies
+                    body: JSON.stringify({ symptoms })
+                });
+
+                const data = await response.json();
+
+                // Hide loading
+                loading.style.display = 'none';
+
+                if (response.ok && data.status === 'success') {
+                    // Show success response
+                    aiResponse.innerHTML = data.data.guidance.replace(/\n/g, '<br>');
+                    disclaimer.textContent = data.data.disclaimer;
+                    responseBox.style.display = 'block';
+                } else if (response.status === 401) {
+                    // Not authenticated
+                    alert('⚠️ Please login first!\n\nYou need to be logged in as a patient to use this feature.');
+                    window.location.href = '../login.html';
+                } else if (response.status === 403) {
+                    // Wrong role
+                    alert('⚠️ Access Denied\n\nThis feature is only available for patients.');
+                } else {
+                    // Other error
+                    alert('❌ Error: ' + (data.message || 'Unable to get AI guidance'));
+                }
+            } catch (error) {
+                loading.style.display = 'none';
+                console.error('Error:', error);
+                alert('❌ Network Error\n\nMake sure the Flask server is running on http://127.0.0.1:5000');
+            }
+        });
+
+        // Character counter
+        const textarea = document.getElementById('symptoms');
+        textarea.addEventListener('input', () => {
+            const length = textarea.value.length;
+            const color = length < 10 ? 'text-danger' : length > 900 ? 'text-warning' : 'text-success';
+            document.querySelector('.text-muted').innerHTML = 
+                `<span class="${color}">${length}/1000 characters</span>`;
+        });
+    </script>
+</body>
+</html>

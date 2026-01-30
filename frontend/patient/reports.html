@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Reports - Health Nova</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f8f9fa; }
+        .navbar { background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 1rem 0; }
+        .content-wrapper { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .report-card { background: white; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.3s ease; }
+        .report-card:hover { transform: translateY(-3px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+        .report-icon { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; }
+        .btn-view { background: #1e88e5; color: white; border: none; padding: 8px 25px; border-radius: 20px; }
+        .btn-download { background: #4caf50; color: white; border: none; padding: 8px 25px; border-radius: 20px; }
+        .filter-tabs { background: white; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand text-primary fw-bold" href="dashboard.html">
+                <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+            </a>
+        </div>
+    </nav>
+
+    <div class="content-wrapper">
+        <h2 class="mb-4"><i class="bi bi-file-earmark-medical text-primary me-2"></i>Medical Reports</h2>
+
+        <div class="filter-tabs">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" onclick="filterReports('all')">All Reports</button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterReports('lab')">Lab Tests</button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterReports('scan')">Scans & Imaging</button>
+                <button type="button" class="btn btn-outline-primary" onclick="filterReports('prescription')">Prescriptions</button>
+            </div>
+        </div>
+
+        <div id="reportsList">
+            <!-- Reports will be dynamically generated -->
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const reports = [
+            { id: 1, type: 'lab', name: 'Complete Blood Count (CBC)', date: '2026-01-28', doctor: 'Dr. Sharma', status: 'Available', icon: 'bi-droplet', color: '#e3f2fd' },
+            { id: 2, type: 'scan', name: 'Chest X-Ray', date: '2026-01-25', doctor: 'Dr. Patel', status: 'Available', icon: 'bi-lungs', color: '#f3e5f5' },
+            { id: 3, type: 'lab', name: 'Lipid Profile', date: '2026-01-22', doctor: 'Dr. Kumar', status: 'Available', icon: 'bi-heart-pulse', color: '#e8f5e9' },
+            { id: 4, type: 'prescription', name: 'Diabetes Medication', date: '2026-01-20', doctor: 'Dr. Sharma', status: 'Available', icon: 'bi-capsule', color: '#fff3e0' },
+            { id: 5, type: 'lab', name: 'Thyroid Function Test', date: '2026-01-15', doctor: 'Dr. Verma', status: 'Available', icon: 'bi-activity', color: '#fce4ec' },
+            { id: 6, type: 'scan', name: 'Ultrasound Abdomen', date: '2026-01-10', doctor: 'Dr. Singh', status: 'Available', icon: 'bi-hospital', color: '#e0f2f1' }
+        ];
+
+        let currentFilter = 'all';
+
+        function renderReports() {
+            const filteredReports = currentFilter === 'all' ? reports : reports.filter(r => r.type === currentFilter);
+            const container = document.getElementById('reportsList');
+            
+            if (filteredReports.length === 0) {
+                container.innerHTML = '<div class="text-center py-5 text-muted">No reports found</div>';
+                return;
+            }
+
+            container.innerHTML = filteredReports.map(report => `
+                <div class="report-card">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="report-icon" style="background: ${report.color}; color: #1e88e5;">
+                                <i class="bi ${report.icon}"></i>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <h5 class="mb-1">${report.name}</h5>
+                            <p class="text-muted mb-1">
+                                <i class="bi bi-calendar me-2"></i>${report.date} 
+                                <i class="bi bi-person-badge ms-3 me-2"></i>${report.doctor}
+                            </p>
+                            <span class="badge bg-success">${report.status}</span>
+                        </div>
+                        <div class="col-auto">
+                            <button class="btn-view me-2" onclick="viewReport(${report.id})">
+                                <i class="bi bi-eye me-1"></i> View
+                            </button>
+                            <button class="btn-download" onclick="downloadReport(${report.id})">
+                                <i class="bi bi-download me-1"></i> Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterReports(type) {
+            currentFilter = type;
+            document.querySelectorAll('.btn-group .btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+            event.target.classList.remove('btn-outline-primary');
+            event.target.classList.add('btn-primary');
+            renderReports();
+        }
+
+        function viewReport(id) {
+            const report = reports.find(r => r.id === id);
+            alert(`Opening report: ${report.name}`);
+        }
+
+        function downloadReport(id) {
+            const report = reports.find(r => r.id === id);
+            alert(`Downloading: ${report.name}`);
+        }
+
+        document.addEventListener('DOMContentLoaded', renderReports);
+    </script>
+</body>
+</html>
