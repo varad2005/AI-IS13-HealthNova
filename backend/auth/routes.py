@@ -138,9 +138,10 @@ def login():
     session['full_name'] = user.full_name
     
     # Determine redirect URL based on role
+    # Use Flask routes for pages that need session context
     redirect_urls = {
         'patient': '/patient/dashboard.html',
-        'doctor': '/doctor/dashboard.html',
+        'doctor': '/doctor/dashboard-page',  # Use Flask route instead of direct HTML
         'lab': '/lab/dashboard.html'
     }
     
@@ -152,8 +153,6 @@ def login():
             'redirect_url': redirect_urls.get(user.role, '/')
         }
     }), 200
-
-
 @auth_bp.route('/logout', methods=['POST'])
 @login_required
 def logout():

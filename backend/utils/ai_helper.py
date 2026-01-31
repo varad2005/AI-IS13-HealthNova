@@ -14,8 +14,7 @@ Relies on Google Gemini API's provider-level rate limits.
 """
 
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -25,10 +24,10 @@ load_dotenv()
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    genai.configure(api_key=GEMINI_API_KEY)
+    print("OK: Gemini API configured successfully")
 else:
-    client = None
-    print("⚠️  Warning: GEMINI_API_KEY not found in environment variables")
+    print("Warning: GEMINI_API_KEY not found in environment variables")
 
 
 # Gemini prompt with safety instructions
@@ -65,21 +64,23 @@ def get_ai_guidance(user_text: str) -> str:
         return "Please describe your health concern so I can provide some guidance."
     
     # Check if API key is configured
-    if not GEMINI_API_KEY or not client:
+    if not GEMINI_API_KEY:
         return _get_fallback_message()
     
     try:
         # Create prompt with safety guidelines
         full_prompt = HEALTH_GUIDANCE_PROMPT.format(user_text=user_text.strip())
         
+        # Create model instance
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        
         # Generate response
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=full_prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=500,
-            )
+        response = model.generate_content(
+            full_prompt,
+            generation_config={
+                'temperature': 0.7,
+                'max_output_tokens': 500,
+            }
         )
         
         # Extract and return text
@@ -90,7 +91,7 @@ def get_ai_guidance(user_text: str) -> str:
     
     except Exception as e:
         # Log error (in production, use proper logging)
-        print(f"❌ Gemini API Error: {str(e)}")
+        print(f"Gemini API Error: {str(e)}")
         return _get_fallback_message()
 
 
@@ -120,7 +121,7 @@ def get_symptom_summary(symptoms: str) -> str:
     if not symptoms or not symptoms.strip():
         return "No symptoms provided"
     
-    if not GEMINI_API_KEY or not client:
+    if not GEMINI_API_KEY:
         return symptoms[:100] + "..." if len(symptoms) > 100 else symptoms
     
     try:
@@ -131,13 +132,13 @@ def get_symptom_summary(symptoms: str) -> str:
         
         Summary (1-2 sentences only):"""
         
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                max_output_tokens=100,
-            )
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(
+            prompt,
+            generation_config={
+                'temperature': 0.3,
+                'max_output_tokens': 100,
+            }
         )
         
         if response and response.text:
@@ -146,7 +147,7 @@ def get_symptom_summary(symptoms: str) -> str:
             return symptoms[:100] + "..." if len(symptoms) > 100 else symptoms
     
     except Exception as e:
-        print(f"❌ Gemini Summary Error: {str(e)}")
+        print(f"Gemini Summary Error: {str(e)}")
         # Return truncated symptoms as fallback
         return symptoms[:100] + "..." if len(symptoms) > 100 else symptoms
 

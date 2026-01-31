@@ -12,46 +12,122 @@ WHY THIS DESIGN:
 - Doctor controls when consultation starts/ends
 - Patient can only join when doctor is ready
 - Prevents unauthorized access to video rooms
+
+REAL-TIME NOTIFICATIONS:
+- When doctor starts meeting, patient gets instant notification via Socket.IO
+- No polling required - patient UI auto-updates
 """
 
-from flask import jsonify, request
-from datetime import datetime
+from flask import jsonify, request, session
+from datetime import datetime, timedelta
 from models import db, Appointment, User
 from auth.decorators import login_required, role_required
 from . import video_bp
+from video_consultation import notify_patient_meeting_started, notify_patient_meeting_ended
+
+
+@video_bp.route('/create-instant-appointment', methods=['POST'])
+@role_required('doctor')
+def create_instant_appointment():
+    """
+    Create an instant appointment for immediate video consultation
+    
+    USE CASE: Doctor wants to start a meeting with a patient from the registry
+    without a pre-scheduled appointment
+    
+    WORKFLOW:
+    1. Create appointment with current timestamp
+    2. Set status to 'scheduled' (will be immediately started)
+    3. Return appointment_id for use in start-meeting endpoint
+    """
+    try:
+        doctor_id = session.get('user_id')
+        data = request.get_json()
+        
+        patient_id = data.get('patient_id')
+        reason = data.get('reason', 'Instant consultation')
+        
+        if not patient_id:
+            return jsonify({
+                'success': False,
+                'error': 'Patient ID is required'
+            }), 400
+        
+        # Verify patient exists
+        patient = User.query.filter_by(id=patient_id, role='patient').first()
+        if not patient:
+            return jsonify({
+                'success': False,
+                'error': 'Patient not found'
+            }), 404
+        
+        # Check if there's already a live meeting with this patient
+        existing_live = Appointment.query.filter_by(
+            doctor_id=doctor_id,
+            patient_id=patient_id,
+            meeting_status='live'
+        ).first()
+        
+        if existing_live:
+            return jsonify({
+                'success': True,
+                'appointment_id': existing_live.id,
+                'message': 'Using existing live meeting'
+            }), 200
+        
+        # Create instant appointment
+        appointment = Appointment(
+            patient_id=patient_id,
+            doctor_id=doctor_id,
+            appointment_date=datetime.utcnow(),
+            duration_minutes=30,
+            reason=reason,
+            status='scheduled',
+            meeting_status='not_started'
+        )
+        
+        db.session.add(appointment)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'appointment_id': appointment.id,
+            'message': 'Instant appointment created'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating instant appointment: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 
 @video_bp.route('/start-meeting/<int:appointment_id>', methods=['POST'])
-@login_required
+@role_required('doctor')
 def start_meeting(appointment_id):
     """
-    Doctor starts a video consultation meeting
+    Doctor starts a video consultation meeting - INSTANT START, NO INTERMEDIATE STEPS
     
     AUTHORIZATION:
     - Only doctors (role='doctor') can start meetings
     - Doctor must be the assigned doctor for this appointment
     
     WORKFLOW:
-    1. Verify user is a doctor
-    2. Verify appointment exists and belongs to this doctor
-    3. Update meeting_status from 'not_started' to 'live'
-    4. Record meeting_started_at timestamp
-    5. Return success (doctor auto-joins, patient can now join)
+    1. Verify appointment exists and belongs to this doctor
+    2. Update meeting_status from 'not_started' to 'live'
+    3. Record meeting_started_at timestamp
+    4. Send real-time notification to patient via Socket.IO
+    5. Return room_id for immediate redirect to video call
     
     SECURITY: appointment_id becomes the WebRTC room ID
-    - No need to generate or share meeting links
-    - Patient dashboard polls this appointment's status
-    - When status='live', patient's Join button enables
     """
     try:
-        # STEP 1: Verify user is a doctor
-        if current_user.role != 'doctor':
-            return jsonify({
-                'success': False,
-                'error': 'Only doctors can start meetings'
-            }), 403
+        doctor_id = session.get('user_id')
+        doctor_name = session.get('full_name', 'Doctor')
         
-        # STEP 2: Find appointment and verify ownership
+        # Find appointment and verify ownership
         appointment = Appointment.query.get(appointment_id)
         
         if not appointment:
@@ -60,38 +136,105 @@ def start_meeting(appointment_id):
                 'error': 'Appointment not found'
             }), 404
         
-        if appointment.doctor_id != current_user.id:
+        if appointment.doctor_id != doctor_id:
             return jsonify({
                 'success': False,
                 'error': 'You can only start your own appointments'
             }), 403
         
-        # STEP 3: Verify appointment is scheduled (not cancelled/completed)
+        # Verify appointment is scheduled (not cancelled/completed)
         if appointment.status in ['cancelled', 'completed']:
             return jsonify({
                 'success': False,
                 'error': f'Cannot start {appointment.status} appointment'
             }), 400
         
-        # STEP 4: Check meeting hasn't already started
+        # Check meeting hasn't already started
         if appointment.meeting_status == 'live':
+            # Already live - just return the room info
             return jsonify({
                 'success': True,
                 'message': 'Meeting already in progress',
+                'room_id': str(appointment_id),
                 'appointment': appointment.to_dict(include_participants=True)
             }), 200
         
-        # STEP 5: Start the meeting
+        # Start the meeting
         appointment.meeting_status = 'live'
         appointment.meeting_started_at = datetime.utcnow()
         
         db.session.commit()
         
+        # Get appointment data for notification
+        appointment_data = appointment.to_dict(include_participants=True)
+        appointment_data['doctor_name'] = doctor_name
+        
+        # REAL-TIME: Notify patient immediately via Socket.IO
+        notify_patient_meeting_started(appointment.patient_id, appointment_data)
+        
         return jsonify({
             'success': True,
             'message': 'Meeting started successfully',
-            'appointment': appointment.to_dict(include_participants=True),
-            'room_id': str(appointment_id)  # appointment_id IS the room identifier
+            'room_id': str(appointment_id),
+            'appointment': appointment_data
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error starting meeting: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+
+@video_bp.route('/end-meeting/<int:appointment_id>', methods=['POST'])
+@role_required('doctor')
+def end_meeting(appointment_id):
+    """
+    Doctor ends a video consultation meeting
+    
+    WORKFLOW:
+    1. Verify appointment belongs to this doctor
+    2. Update meeting_status to 'ended'
+    3. Notify patient in real-time to disconnect gracefully
+    """
+    try:
+        doctor_id = session.get('user_id')
+        
+        appointment = Appointment.query.get(appointment_id)
+        
+        if not appointment:
+            return jsonify({
+                'success': False,
+                'error': 'Appointment not found'
+            }), 404
+        
+        if appointment.doctor_id != doctor_id:
+            return jsonify({
+                'success': False,
+                'error': 'You can only end your own appointments'
+            }), 403
+        
+        if appointment.meeting_status != 'live':
+            return jsonify({
+                'success': False,
+                'error': 'Meeting is not currently live'
+            }), 400
+        
+        # End the meeting
+        appointment.meeting_status = 'ended'
+        appointment.meeting_ended_at = datetime.utcnow()
+        appointment.status = 'completed'
+        
+        db.session.commit()
+        
+        # REAL-TIME: Notify patient to disconnect gracefully
+        notify_patient_meeting_ended(appointment.patient_id, appointment_id)
+        
+        return jsonify({
+            'success': True,
+            'message': 'Meeting ended successfully'
         }), 200
         
     except Exception as e:
@@ -112,7 +255,6 @@ def get_meeting_status(appointment_id):
     - User must be either the patient or doctor for this appointment
     
     USE CASES:
-    - Patient dashboard polls this every 3 seconds
     - Enables "Join Consultation" button when status='live'
     - Shows appropriate status messages to patient
     
@@ -122,6 +264,9 @@ def get_meeting_status(appointment_id):
     - message: User-friendly status message
     """
     try:
+        user_id = session.get('user_id')
+        user_role = session.get('role')
+        
         appointment = Appointment.query.get(appointment_id)
         
         if not appointment:
@@ -132,8 +277,8 @@ def get_meeting_status(appointment_id):
         
         # Verify user is part of this appointment
         is_participant = (
-            appointment.patient_id == current_user.id or 
-            appointment.doctor_id == current_user.id
+            appointment.patient_id == user_id or 
+            appointment.doctor_id == user_id
         )
         
         if not is_participant:
@@ -143,8 +288,8 @@ def get_meeting_status(appointment_id):
             }), 403
         
         # Determine if user can join
-        is_doctor = current_user.role == 'doctor'
-        is_patient = current_user.role == 'patient'
+        is_doctor = user_role == 'doctor'
+        is_patient = user_role == 'patient'
         
         can_join = False
         message = ''
@@ -181,78 +326,9 @@ def get_meeting_status(appointment_id):
         }), 500
 
 
-@video_bp.route('/end-meeting/<int:appointment_id>', methods=['POST'])
-@login_required
-def end_meeting(appointment_id):
-    """
-    Doctor ends a video consultation meeting
-    
-    AUTHORIZATION:
-    - Only doctors can end meetings
-    - Doctor must be the assigned doctor for this appointment
-    
-    WORKFLOW:
-    1. Verify user is a doctor
-    2. Verify appointment exists and belongs to this doctor
-    3. Update meeting_status to 'ended'
-    4. Record meeting_ended_at timestamp
-    5. Update appointment status to 'completed'
-    """
-    try:
-        # STEP 1: Verify user is a doctor
-        if current_user.role != 'doctor':
-            return jsonify({
-                'success': False,
-                'error': 'Only doctors can end meetings'
-            }), 403
-        
-        # STEP 2: Find appointment and verify ownership
-        appointment = Appointment.query.get(appointment_id)
-        
-        if not appointment:
-            return jsonify({
-                'success': False,
-                'error': 'Appointment not found'
-            }), 404
-        
-        if appointment.doctor_id != current_user.id:
-            return jsonify({
-                'success': False,
-                'error': 'You can only end your own appointments'
-            }), 403
-        
-        # STEP 3: Check meeting is actually live
-        if appointment.meeting_status == 'ended':
-            return jsonify({
-                'success': True,
-                'message': 'Meeting already ended',
-                'appointment': appointment.to_dict(include_participants=True)
-            }), 200
-        
-        # STEP 4: End the meeting
-        appointment.meeting_status = 'ended'
-        appointment.meeting_ended_at = datetime.utcnow()
-        appointment.status = 'completed'  # Mark appointment as completed
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Meeting ended successfully',
-            'appointment': appointment.to_dict(include_participants=True)
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-
 @video_bp.route('/my-appointments', methods=['GET'])
 @login_required
-def get_my_appointments(current_user):
+def get_my_appointments():
     """
     Get all appointments for current user (doctor or patient)
     
@@ -266,11 +342,14 @@ def get_my_appointments(current_user):
     - Patient dashboard: Show appointments with conditional Join buttons
     """
     try:
+        user_id = session.get('user_id')
+        user_role = session.get('role')
+        
         # Base query based on user role
-        if current_user.role == 'doctor':
-            query = Appointment.query.filter_by(doctor_id=current_user.id)
-        elif current_user.role == 'patient':
-            query = Appointment.query.filter_by(patient_id=current_user.id)
+        if user_role == 'doctor':
+            query = Appointment.query.filter_by(doctor_id=user_id)
+        elif user_role == 'patient':
+            query = Appointment.query.filter_by(patient_id=user_id)
         else:
             return jsonify({
                 'success': False,
@@ -308,7 +387,7 @@ def get_my_appointments(current_user):
 
 @video_bp.route('/create-appointment', methods=['POST'])
 @login_required
-def create_appointment(current_user):
+def create_appointment():
     """
     Create a new appointment (can be called by patient or admin)
     
@@ -323,6 +402,9 @@ def create_appointment(current_user):
     - duration_minutes: 30
     """
     try:
+        user_id = session.get('user_id')
+        user_role = session.get('role')
+        
         data = request.get_json()
         
         # Validate required fields
@@ -334,8 +416,8 @@ def create_appointment(current_user):
         
         # If current user is patient, use their ID
         # If admin/doctor, use provided patient_id
-        if current_user.role == 'patient':
-            patient_id = current_user.id
+        if user_role == 'patient':
+            patient_id = user_id
         else:
             patient_id = data.get('patient_id')
             if not patient_id:

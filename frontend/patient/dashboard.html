@@ -238,7 +238,7 @@
     <div class="service-menu">
         <div class="container">
             <div class="service-icons">
-                <a href="#" onclick="startVideoConsultation(); return false;" class="service-item">
+                <a href="#appointmentsContainer" onclick="showVideoConsultInfo(); return false;" class="service-item">
                     <div class="service-icon-wrapper"><i class="bi bi-camera-video"></i></div>
                     <h6>Video Consult</h6>
                 </a>
@@ -361,13 +361,252 @@
     </button>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Socket.IO for real-time meeting notifications -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.min.js"></script>
     <script src="/js/i18n.js"></script>
+
+    <!-- Real-time Meeting Notification System -->
+    <script>
+        // ===================================================
+        // SOCKET.IO REAL-TIME MEETING NOTIFICATIONS
+        // ===================================================
+        // Patient receives instant notification when doctor starts a meeting
+        // No polling required - Socket.IO pushes events in real-time
+
+        let notificationSocket = null;
+        let currentUserId = null;
+
+        /**
+         * Initialize Socket.IO connection for meeting notifications
+         * Called after page load and authentication check
+         */
+        function initMeetingNotifications() {
+            // Get user ID from session storage
+            const userData = sessionStorage.getItem('user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    currentUserId = user.id;
+                } catch (e) {
+                    console.error('Error parsing user data:', e);
+                    return;
+                }
+            }
+
+            if (!currentUserId) {
+                console.warn('No user ID found, skipping Socket.IO registration');
+                return;
+            }
+
+            // Connect to Socket.IO server
+            notificationSocket = io({
+                transports: ['websocket', 'polling'],
+                reconnection: true,
+                reconnectionAttempts: 5,
+                reconnectionDelay: 1000
+            });
+
+            notificationSocket.on('connect', () => {
+                console.log('Connected to notification server');
+                
+                // Register for personal notifications
+                notificationSocket.emit('register_user', {
+                    user_id: currentUserId,
+                    user_type: 'patient'
+                });
+            });
+
+            notificationSocket.on('registered', (data) => {
+                console.log('Registered for notifications:', data);
+            });
+
+            // ========================================
+            // MEETING STARTED - Doctor has started the consultation
+            // ========================================
+            notificationSocket.on('meeting_started', (data) => {
+                console.log('Meeting started notification received:', data);
+                
+                // Show notification modal
+                showMeetingNotification(data);
+                
+                // Update the specific appointment's join button if visible
+                const joinBtn = document.getElementById(`join-btn-${data.appointment_id}`);
+                if (joinBtn) {
+                    joinBtn.disabled = false;
+                    joinBtn.className = 'btn btn-success btn-sm';
+                    joinBtn.innerHTML = '<i class="bi bi-camera-video me-1"></i>Join Now!';
+                    
+                    // Add pulse animation
+                    joinBtn.classList.add('pulse-animation');
+                }
+
+                const statusMsg = document.getElementById(`status-msg-${data.appointment_id}`);
+                if (statusMsg) {
+                    statusMsg.innerHTML = '<span class="text-success fw-semibold"><i class="bi bi-broadcast me-1"></i>Live Now!</span>';
+                }
+            });
+
+            // ========================================
+            // MEETING ENDED - Doctor has ended the consultation
+            // ========================================
+            notificationSocket.on('meeting_ended', (data) => {
+                console.log('Meeting ended notification received:', data);
+                
+                // Show ended message
+                showMeetingEndedNotification(data);
+                
+                // Update the specific appointment's button
+                const joinBtn = document.getElementById(`join-btn-${data.appointment_id}`);
+                if (joinBtn) {
+                    joinBtn.disabled = true;
+                    joinBtn.className = 'btn btn-secondary btn-sm';
+                    joinBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>Completed';
+                    joinBtn.classList.remove('pulse-animation');
+                }
+
+                const statusMsg = document.getElementById(`status-msg-${data.appointment_id}`);
+                if (statusMsg) {
+                    statusMsg.innerHTML = '<span class="text-muted">Consultation ended</span>';
+                }
+            });
+
+            notificationSocket.on('disconnect', () => {
+                console.log('Disconnected from notification server');
+            });
+
+            notificationSocket.on('error', (error) => {
+                console.error('Socket.IO error:', error);
+            });
+        }
+
+        /**
+         * Show a prominent notification when doctor starts the meeting
+         */
+        function showMeetingNotification(data) {
+            // Remove any existing notification modal
+            const existingModal = document.getElementById('meetingNotificationModal');
+            if (existingModal) {
+                existingModal.remove();
+            }
+
+            // Create notification modal
+            const modalHTML = `
+                <div class="modal fade" id="meetingNotificationModal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-body text-center p-4">
+                                <div class="meeting-notification-icon mb-3">
+                                    <i class="bi bi-camera-video-fill text-success" style="font-size: 3rem;"></i>
+                                </div>
+                                <h4 class="fw-bold text-success mb-2">
+                                    <i class="bi bi-broadcast me-2"></i>Meeting is Live!
+                                </h4>
+                                <p class="text-muted mb-3">
+                                    <strong>${data.doctor_name || 'Your doctor'}</strong> has started the consultation.<br>
+                                    Click below to join now.
+                                </p>
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-lg" onclick="joinMeetingNow(${data.appointment_id}, '${data.doctor_name || 'Doctor'}')">
+                                        <i class="bi bi-camera-video me-2"></i>Join Meeting Now
+                                    </button>
+                                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                        Join Later
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            const modal = new bootstrap.Modal(document.getElementById('meetingNotificationModal'));
+            modal.show();
+
+            // Play notification sound (optional)
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleylUUZTF6eeTXkw9TlqZ5d2qWw==');
+                audio.volume = 0.3;
+                audio.play().catch(() => {});
+            } catch (e) {}
+        }
+
+        /**
+         * Show notification when meeting has ended
+         */
+        function showMeetingEndedNotification(data) {
+            // Create a toast notification
+            const toastHTML = `
+                <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                    <div id="meetingEndedToast" class="toast" role="alert">
+                        <div class="toast-header">
+                            <i class="bi bi-info-circle text-primary me-2"></i>
+                            <strong class="me-auto">Consultation Ended</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+                        </div>
+                        <div class="toast-body">
+                            ${data.message || 'The doctor has ended the consultation.'}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', toastHTML);
+            const toast = new bootstrap.Toast(document.getElementById('meetingEndedToast'));
+            toast.show();
+        }
+
+        /**
+         * Join meeting immediately - called from notification modal
+         */
+        function joinMeetingNow(appointmentId, doctorName) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('meetingNotificationModal'));
+            if (modal) modal.hide();
+
+            // Get patient name
+            let patientName = 'Patient';
+            const userData = sessionStorage.getItem('user');
+            if (userData) {
+                try {
+                    const user = JSON.parse(userData);
+                    patientName = user.full_name || 'Patient';
+                } catch (e) {}
+            }
+
+            // Redirect to video call page
+            const videoUrl = `/patient/video-call.html?appointment_id=${appointmentId}&type=patient&name=${encodeURIComponent(patientName)}`;
+            window.location.href = videoUrl;
+        }
+    </script>
+
+    <!-- CSS for notification animations -->
+    <style>
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+        }
+        .pulse-animation {
+            animation: pulse 1.5s infinite;
+        }
+        .meeting-notification-icon {
+            animation: pulse 1.5s infinite;
+            display: inline-block;
+            border-radius: 50%;
+            padding: 15px;
+            background: rgba(40, 167, 69, 0.1);
+        }
+    </style>
 
     <script>
         // Check authentication and load user data on page load
         window.addEventListener('DOMContentLoaded', function() {
             checkAuthentication();
             loadUserData();
+            // Initialize real-time meeting notifications
+            initMeetingNotifications();
         });
 
         function checkAuthentication() {
@@ -381,18 +620,34 @@
         }
 
         function loadUserData() {
-            // Get user data from sessionStorage
-            const userData = sessionStorage.getItem('user');
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    // Update UI with user information
-                    document.getElementById('userName').textContent = user.full_name || 'Patient';
-                    document.getElementById('userInfo').textContent = `ID: #${user.id || 'N/A'}`;
-                } catch (error) {
-                    console.error('Error parsing user data:', error);
-                }
-            }
+            // Fetch user data from backend API
+            fetch('/patient/current-user')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.data.full_name) {
+                        // Update UI with user information
+                        document.getElementById('userName').textContent = data.data.full_name;
+                        document.getElementById('userInfo').textContent = `ID: #${data.data.user_id || 'N/A'}`;
+                    } else {
+                        // Fallback to sessionStorage if API call fails
+                        const userData = sessionStorage.getItem('user');
+                        if (userData) {
+                            const user = JSON.parse(userData);
+                            document.getElementById('userName').textContent = user.full_name || 'Patient';
+                            document.getElementById('userInfo').textContent = `ID: #${user.id || 'N/A'}`;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user data:', error);
+                    // Fallback to sessionStorage on error
+                    const userData = sessionStorage.getItem('user');
+                    if (userData) {
+                        const user = JSON.parse(userData);
+                        document.getElementById('userName').textContent = user.full_name || 'Patient';
+                        document.getElementById('userInfo').textContent = `ID: #${user.id || 'N/A'}`;
+                    }
+                });
         }
 
         // Data to simulate a backend response
@@ -447,46 +702,65 @@
             }
         }
 
-        function startVideoConsultation() {
-            // Get user data
-            const userData = sessionStorage.getItem('user');
-            let patientName = 'Patient';
+        /**
+         * Show information about video consultation
+         * Video meetings are appointment-based - no manual room IDs needed
+         */
+        function showVideoConsultInfo() {
+            const modalHTML = `
+                <div class="modal fade" id="videoConsultInfoModal" tabindex="-1">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header border-0 bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-camera-video me-2"></i>Video Consultation
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body p-4">
+                                <div class="text-center mb-4">
+                                    <div class="bg-primary-soft text-primary rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                                        <i class="bi bi-calendar-check" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                    <h5 class="fw-bold">Appointment-Based Video Calls</h5>
+                                </div>
+                                
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    <strong>How it works:</strong>
+                                </div>
+                                
+                                <ol class="ps-3">
+                                    <li class="mb-2">📅 <strong>Book an appointment</strong> with your doctor</li>
+                                    <li class="mb-2">⏰ <strong>Wait for your scheduled time</strong></li>
+                                    <li class="mb-2">🔔 <strong>Get instant notification</strong> when doctor starts the meeting</li>
+                                    <li class="mb-2">🎥 <strong>Click "Join Now"</strong> to connect - No room IDs needed!</li>
+                                </ol>
+                                
+                                <div class="alert alert-success mt-3">
+                                    <i class="bi bi-shield-check me-2"></i>
+                                    Secure, seamless, and automatic - your doctor controls when meetings start!
+                                </div>
+                                
+                                <div class="text-center mt-4">
+                                    <p class="text-muted small">Check your appointments below for upcoming consultations</p>
+                                    <button class="btn btn-primary" data-bs-dismiss="modal" onclick="document.getElementById('appointmentsContainer').scrollIntoView({behavior: 'smooth'});">
+                                        View My Appointments
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
             
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    patientName = user.full_name || 'Patient';
-                } catch (error) {
-                    console.error('Error parsing user data:', error);
-                }
-            }
+            // Remove existing modal if any
+            const existing = document.getElementById('videoConsultInfoModal');
+            if (existing) existing.remove();
             
-            // Generate a unique room ID for the consultation
-            const roomId = 'consultation_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-            
-            // Prompt to get room ID from doctor or create new
-            const action = prompt(
-                "Video Consultation Options:\\n\\n" +
-                "1. Enter 'new' to start a new waiting room\\n" +
-                "2. Enter the Room ID provided by your doctor\\n\\n" +
-                "Enter your choice:"
-            );
-            
-            if (action === null) return; // User cancelled
-            
-            let finalRoomId;
-            if (action.toLowerCase() === 'new') {
-                finalRoomId = roomId;
-                alert(`Your Room ID: ${finalRoomId}\\n\\nShare this ID with your doctor to connect.\\n\\nWaiting for doctor to join...`);
-            } else if (action.trim() !== '') {
-                finalRoomId = action.trim();
-            } else {
-                alert('Invalid input. Please try again.');
-                return;
-            }
-            
-            // Open video call page with patient parameters
-            window.location.href = `video-call.html?room=${finalRoomId}&type=patient&name=${encodeURIComponent(patientName)}`;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            const modal = new bootstrap.Modal(document.getElementById('videoConsultInfoModal'));
+            modal.show();
         }
         
         // Chatbot toggle function

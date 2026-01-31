@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, session, send_from_directory
-from models import db, User, PatientProfile, Visit, LabTest, Prescription
+from models import db, User, PatientProfile, Visit, LabTest, Prescription, Appointment
 from auth.decorators import role_required
-from datetime import datetime
+from datetime import datetime, date
 import os
 from utils.medical_history import (
     get_patient_timeline, 
@@ -12,6 +12,192 @@ from utils.medical_history import (
 )
 
 doctor_bp = Blueprint('doctor', __name__)
+
+
+# ============================================================================
+# GET CURRENT USER INFO
+# ============================================================================
+@doctor_bp.route('/current-user', methods=['GET'])
+@role_required('doctor')
+def get_current_user():
+    """Get current logged-in doctor's information"""
+    user_id = session.get('user_id')
+    full_name = session.get('full_name')
+    role = session.get('role')
+    
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'user_id': user_id,
+            'full_name': full_name,
+            'role': role
+        }
+    })
+
+
+# ============================================================================
+# APPOINTMENTS MANAGEMENT
+# ============================================================================
+@doctor_bp.route('/appointments', methods=['GET'])
+@role_required('doctor')
+def get_doctor_appointments():
+    """Get all appointments for the logged-in doctor"""
+    doctor_id = session.get('user_id')
+    
+    try:
+        # Get query parameters
+        status_filter = request.args.get('status')  # Optional: filter by status
+        date_filter = request.args.get('date')  # Optional: filter by date (YYYY-MM-DD)
+        
+        # Base query
+        query = Appointment.query.filter_by(doctor_id=doctor_id)
+        
+        # Apply filters
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        if date_filter:
+            try:
+                target_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+                # Filter appointments for that specific day
+                query = query.filter(
+                    db.func.date(Appointment.appointment_date) == target_date
+                )
+            except ValueError:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Invalid date format. Use YYYY-MM-DD'
+                }), 400
+        
+        # Get appointments ordered by date
+        appointments = query.order_by(Appointment.appointment_date.asc()).all()
+        
+        return jsonify({
+            'status': 'success',
+            'data': [apt.to_dict(include_participants=True) for apt in appointments],
+            'count': len(appointments)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching doctor appointments: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch appointments'
+        }), 500
+
+
+@doctor_bp.route('/appointments/today', methods=['GET'])
+@role_required('doctor')
+def get_todays_appointments():
+    """Get today's appointments for the logged-in doctor"""
+    doctor_id = session.get('user_id')
+    
+    try:
+        # Get today's date
+        today = date.today()
+        
+        # Query appointments for today
+        appointments = Appointment.query.filter(
+            Appointment.doctor_id == doctor_id,
+            db.func.date(Appointment.appointment_date) == today
+        ).order_by(Appointment.appointment_date.asc()).all()
+        
+        return jsonify({
+            'status': 'success',
+            'data': [apt.to_dict(include_participants=True) for apt in appointments],
+            'count': len(appointments),
+            'date': today.isoformat()
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching today's appointments: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch today\'s appointments'
+        }), 500
+
+
+@doctor_bp.route('/appointments/<int:appointment_id>', methods=['GET'])
+@role_required('doctor')
+def get_appointment_details(appointment_id):
+    """Get details of a specific appointment"""
+    doctor_id = session.get('user_id')
+    
+    try:
+        appointment = Appointment.query.filter_by(
+            id=appointment_id,
+            doctor_id=doctor_id
+        ).first()
+        
+        if not appointment:
+            return jsonify({
+                'status': 'error',
+                'message': 'Appointment not found'
+            }), 404
+        
+        return jsonify({
+            'status': 'success',
+            'data': appointment.to_dict(include_participants=True)
+        }), 200
+        
+    except Exception as e:
+        print(f"Error fetching appointment details: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch appointment details'
+        }), 500
+
+
+@doctor_bp.route('/appointments/<int:appointment_id>/update', methods=['PUT'])
+@role_required('doctor')
+def update_appointment(appointment_id):
+    """Update appointment status or notes"""
+    doctor_id = session.get('user_id')
+    data = request.get_json()
+    
+    try:
+        appointment = Appointment.query.filter_by(
+            id=appointment_id,
+            doctor_id=doctor_id
+        ).first()
+        
+        if not appointment:
+            return jsonify({
+                'status': 'error',
+                'message': 'Appointment not found'
+            }), 404
+        
+        # Update allowed fields
+        if 'status' in data:
+            appointment.status = data['status']
+        
+        if 'notes' in data:
+            appointment.notes = data['notes']
+        
+        if 'meeting_status' in data:
+            appointment.meeting_status = data['meeting_status']
+            
+            if data['meeting_status'] == 'live' and not appointment.meeting_started_at:
+                appointment.meeting_started_at = datetime.utcnow()
+            elif data['meeting_status'] == 'ended' and not appointment.meeting_ended_at:
+                appointment.meeting_ended_at = datetime.utcnow()
+        
+        appointment.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Appointment updated successfully',
+            'data': appointment.to_dict(include_participants=True)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error updating appointment: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to update appointment'
+        }), 500
 
 
 # ============================================================================
@@ -46,6 +232,16 @@ def doctor_chatbot_page():
     # Path: backend/doctor/routes.py -> .. -> backend/ -> .. -> root/ -> frontend/doctor/
     frontend_path = os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'doctor')
     return send_from_directory(frontend_path, 'doctor-chatbot.html')
+    
+@doctor_bp.route('/dashboard-page', methods=['GET'])
+@role_required('doctor')
+def dashboard_page():
+    """Serve doctor dashboard HTML page with session context"""
+    import os
+    from flask import send_from_directory
+    # Serve the dashboard HTML file from frontend/doctor directory
+    frontend_path = os.path.join(os.path.dirname(__file__), '..', '..', 'frontend', 'doctor')
+    return send_from_directory(frontend_path, 'dashboard.html')
 
 
 @doctor_bp.route('/dashboard', methods=['GET'])

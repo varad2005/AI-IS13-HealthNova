@@ -13,6 +13,11 @@ WebRTC Flow:
 
 The server ONLY handles signaling (offer, answer, ICE).
 Actual media streams go directly peer-to-peer (not through server).
+
+REAL-TIME NOTIFICATIONS:
+- When doctor starts meeting, patient gets instant notification via Socket.IO
+- Patient UI auto-updates without page refresh
+- Meeting state (active/ended) is broadcast in real-time
 """
 
 from flask_socketio import emit, join_room, leave_room
@@ -21,17 +26,67 @@ from flask import request
 # Store active rooms and their participants
 active_rooms = {}
 
+# Store user socket mappings for notifications (user_id -> socket_id)
+user_sockets = {}
+
+# Global reference to socketio instance
+_socketio = None
+
+def get_socketio():
+    """Get the socketio instance"""
+    return _socketio
+
+def notify_patient_meeting_started(patient_id, appointment_data):
+    """
+    Send real-time notification to patient when doctor starts meeting.
+    Called from video routes when meeting is started.
+    """
+    if _socketio is None:
+        print("Warning: SocketIO not initialized")
+        return False
+    
+    # Emit to patient's personal room (patient_{user_id})
+    patient_room = f"patient_{patient_id}"
+    _socketio.emit('meeting_started', {
+        'appointment_id': appointment_data['id'],
+        'doctor_name': appointment_data.get('doctor_name', 'Doctor'),
+        'room_id': str(appointment_data['id']),
+        'message': 'Doctor has started the consultation. Join now!'
+    }, room=patient_room)
+    
+    print(f"Notified patient {patient_id} about meeting start for appointment {appointment_data['id']}")
+    return True
+
+def notify_patient_meeting_ended(patient_id, appointment_id):
+    """
+    Send real-time notification to patient when doctor ends meeting.
+    """
+    if _socketio is None:
+        return False
+    
+    patient_room = f"patient_{patient_id}"
+    _socketio.emit('meeting_ended', {
+        'appointment_id': appointment_id,
+        'message': 'The doctor has ended the consultation.'
+    }, room=patient_room)
+    
+    print(f"Notified patient {patient_id} about meeting end for appointment {appointment_id}")
+    return True
+
 def register_socketio_events(socketio):
     """
     Register all SocketIO event handlers for video consultation
     
     Events:
     - join_room: User joins a consultation room
+    - register_user: User registers for personal notifications
     - offer: WebRTC offer (SDP)
     - answer: WebRTC answer (SDP)
     - ice_candidate: ICE candidate for peer connection
     - leave_room: User leaves the consultation
     """
+    global _socketio
+    _socketio = socketio
     
     @socketio.on('connect')
     def handle_connect():
@@ -44,6 +99,13 @@ def register_socketio_events(socketio):
         """Called when a client disconnects"""
         print(f'Client disconnected: {request.sid}')
         
+        # Remove user from user_sockets mapping
+        for user_id, sid in list(user_sockets.items()):
+            if sid == request.sid:
+                del user_sockets[user_id]
+                print(f"User {user_id} unregistered from notifications")
+                break
+        
         # Remove user from all rooms
         for room_id, participants in list(active_rooms.items()):
             if request.sid in participants:
@@ -54,6 +116,40 @@ def register_socketio_events(socketio):
                 # Clean up empty rooms
                 if len(participants) == 0:
                     del active_rooms[room_id]
+    
+    @socketio.on('register_user')
+    def handle_register_user(data):
+        """
+        Register user for personal notifications (meeting started/ended).
+        Patient connects and registers to receive real-time meeting notifications.
+        
+        Args:
+            data: {
+                'user_id': int - User ID from session,
+                'user_type': string - 'patient' or 'doctor'
+            }
+        """
+        user_id = data.get('user_id')
+        user_type = data.get('user_type')
+        
+        if not user_id:
+            emit('error', {'message': 'User ID is required'})
+            return
+        
+        # Store socket mapping
+        user_sockets[user_id] = request.sid
+        
+        # Join user's personal notification room
+        personal_room = f"{user_type}_{user_id}"
+        join_room(personal_room)
+        
+        print(f"User {user_id} ({user_type}) registered for notifications in room {personal_room}")
+        
+        emit('registered', {
+            'user_id': user_id,
+            'user_type': user_type,
+            'room': personal_room
+        })
     
     @socketio.on('join_room')
     def handle_join_room(data):

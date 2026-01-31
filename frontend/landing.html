@@ -105,6 +105,7 @@
                     <li class="nav-item"><a class="nav-link" href="#about" data-i18n="about">About</a></li>
                     <li class="nav-item"><a class="nav-link" href="#ecosystem" data-i18n="services">Services</a></li>
                     <li class="nav-item"><a class="nav-link" href="patient-chatbot.html"><i class="bi bi-chat-dots-fill text-primary me-1"></i><span data-i18n="health_assistant">Health Assistant</span></a></li>
+                    
                     <li class="nav-item dropdown ms-lg-3">
                         <button class="btn btn-light rounded-pill dropdown-toggle fw-bold language-dropdown-toggle" data-bs-toggle="dropdown">
                             <i class="bi bi-translate text-primary me-2"></i><span data-i18n="language">Language</span>
@@ -132,9 +133,9 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <div class="voice-action-box" data-aos="zoom-in">
-                    <h4 class="fw-bold mb-0 text-dark" data-i18n="try_voice_booking">Try AI Voice Booking:</h4>
-                    <button class="btn btn-primary btn-lg rounded-pill px-5 py-2 fw-bold shadow" onclick="alert('Listening...')">
-                        <i class="bi bi-mic-fill me-2"></i> <span data-i18n="start_speaking">Start Speaking</span>
+                    <h4 class="fw-bold mb-0 text-dark" data-i18n="try_voice_booking">Voice Assistance:</h4>
+                    <button class="btn btn-primary btn-lg rounded-pill px-5 py-2 fw-bold shadow" onclick="window.open('http://127.0.0.1:7860', '_blank')">
+                        <i class="bi bi-mic-fill me-2"></i> <span data-i18n="start_speaking">Assist</span>
                     </button>
                 </div>
             </div>
@@ -153,7 +154,7 @@
                         <i class="bi bi-person-heart feature-icon"></i>
                         <h4 class="fw-bold" data-i18n="patient_portal">Patient Portal</h4>
                         <p class="text-muted" data-i18n="patient_portal_desc">Book appointments, view lab reports, and consult doctors online with multilingual support.</p>
-                        <a href="patient/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                        <a href="login.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
@@ -161,7 +162,7 @@
                         <i class="bi bi-person-workspace feature-icon"></i>
                         <h4 class="fw-bold" data-i18n="doctor_desk">Doctor's Desk</h4>
                         <p class="text-muted" data-i18n="doctor_desk_desc">Secure portal for clinicians to track patient trends and pathology data instantly.</p>
-                        <a href="doctor/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                        <a href="login.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
                 <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
@@ -169,7 +170,7 @@
                         <i class="bi bi-truck-flatbed feature-icon"></i>
                         <h4 class="fw-bold" data-i18n="lab_hub">Lab Technician Hub</h4>
                         <p class="text-muted" data-i18n="lab_hub_desc">Advanced tools for laboratory technicians to manage rural sample collection logistics.</p>
-                        <a href="lab/dashboard.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
+                        <a href="login.html" class="btn btn-outline-primary btn-sm mt-3"><span data-i18n="access_portal">Access Portal</span> <i class="bi bi-arrow-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -194,7 +195,6 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="feature-img-wrapper">
-                        
                         <img src="https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80" alt="Clinical Dashboard" class="feature-img">
                     </div>
                 </div>
@@ -210,7 +210,6 @@
                 </div>
                 <div class="col-lg-6">
                     <div class="feature-img-wrapper">
-                        
                         <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80" alt="Lab Logistics" class="feature-img">
                     </div>
                 </div>

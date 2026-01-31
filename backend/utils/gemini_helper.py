@@ -1,6 +1,5 @@
 import os
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -8,7 +7,31 @@ load_dotenv()
 
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-client = genai.Client(api_key=GEMINI_API_KEY)
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    print("Gemini API configured with key")
+else:
+    print("Warning: GEMINI_API_KEY not found in environment")
+
+def verify_gemini_connection():
+    """
+    Verify Gemini API connection and list available models.
+    Called during server startup for diagnostics.
+    """
+    if not GEMINI_API_KEY:
+        print("Gemini API: No API key configured")
+        return False
+    
+    try:
+        # Try to list available models
+        models = genai.list_models()
+        available = [m.name for m in models if 'generateContent' in m.supported_generation_methods]
+        print(f"Gemini API: Connected successfully")
+        print(f"  Available models: {', '.join(available[:3])}")
+        return True
+    except Exception as e:
+        print(f"Gemini API: Connection failed - {str(e)}")
+        return False
 
 # System prompt for health context
 SYSTEM_PROMPT = """You are Health Nova AI, a helpful and professional medical AI assistant. Your role is to:
@@ -40,15 +63,20 @@ def get_ai_response(user_message):
     Returns:
         dict: Response with success status and message
     """
+    if not GEMINI_API_KEY:
+        return {
+            'success': False,
+            'message': get_fallback_response(user_message),
+            'error': 'Gemini API key not configured'
+        }
+    
     try:
         # Create the full prompt with system context
         full_prompt = f"{SYSTEM_PROMPT}\n\nUser question: {user_message}"
         
-        # Generate response using Gemini 2.5 Flash (latest model)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=full_prompt
-        )
+        # Generate response using Gemini 2.5 Flash
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        response = model.generate_content(full_prompt)
         
         # Check if response has text
         if not response.text:

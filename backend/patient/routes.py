@@ -8,6 +8,27 @@ from utils.ai_helper import get_ai_guidance, get_symptom_summary
 patient_bp = Blueprint('patient', __name__, template_folder='../../frontend/patient')
 
 
+# ============================================================================
+# GET CURRENT USER INFO
+# ============================================================================
+@patient_bp.route('/current-user', methods=['GET'])
+@role_required('patient')
+def get_current_user():
+    """Get current logged-in patient's information"""
+    user_id = session.get('user_id')
+    full_name = session.get('full_name')
+    role = session.get('role')
+    
+    return jsonify({
+        'status': 'success',
+        'data': {
+            'user_id': user_id,
+            'full_name': full_name,
+            'role': role
+        }
+    })
+
+
 @patient_bp.route('/dashboard', methods=['GET'])
 def dashboard():
     """Render patient dashboard HTML page"""
@@ -483,19 +504,37 @@ def ai_health_guidance():
 
 
 @patient_bp.route('/ai-chat', methods=['POST'])
-@role_required('patient')
 def ai_chat():
-    """API endpoint: Get AI response for patient queries using Gemini"""
+    """
+    Public API endpoint: Get AI response for patient queries using Gemini
+    
+    Educational chatbot - NO authentication required
+    This is intentionally public for general health awareness
+    """
     try:
         from utils.gemini_helper import get_ai_response
         
         data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Invalid request format'
+            }), 400
+        
         user_message = data.get('message', '').strip()
         
         if not user_message:
             return jsonify({
                 'status': 'error',
                 'message': 'Message is required'
+            }), 400
+        
+        # Basic validation: message length
+        if len(user_message) > 2000:
+            return jsonify({
+                'status': 'error',
+                'message': 'Message too long. Please keep it under 2000 characters.'
             }), 400
         
         # Get AI response from Gemini

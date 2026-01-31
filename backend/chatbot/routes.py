@@ -8,11 +8,15 @@ from flask import request, jsonify, session
 import google.generativeai as genai
 import os
 from datetime import datetime
+from dotenv import load_dotenv
 
 from . import chatbot_bp
 from .knowledge_base import knowledge_base
 from .safety_checks import safety_checker
 from auth.decorators import role_required
+
+# Load environment variables
+load_dotenv()
 
 
 # ============================================================
@@ -65,18 +69,27 @@ def get_gemini_response(user_message: str, system_prompt: str, context: str = ""
         
         if not api_key:
             return {
-                "success": False,
-                "response": "Chatbot is temporarily unavailable. Please try again later or contact support.",
+                "success": True,
+                "response": "I'm currently being set up. For immediate assistance:\n\n📞 Emergency: Call 108 (India) or 911 (USA)\n📞 24/7 Support: 1800-XXX-XXXX\n\nYou can also book an appointment through your dashboard.",
                 "metadata": {
-                    "response_type": "error",
+                    "response_type": "fallback",
                     "error": "API key not configured"
                 }
             }
         
+        # Configure Gemini API
         genai.configure(api_key=api_key)
         
-        # Use Gemini 1.5 Flash for fast responses
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Use Gemini 2.5 Flash for fast, reliable responses
+        model = genai.GenerativeModel(
+            'gemini-2.5-flash',
+            generation_config={
+                'temperature': 0.7,
+                'top_p': 0.95,
+                'top_k': 40,
+                'max_output_tokens': 1024,
+            }
+        )
         
         # ============================================================
         # CONTEXT INJECTION - Inject retrieved knowledge and patient data
@@ -114,24 +127,38 @@ def get_gemini_response(user_message: str, system_prompt: str, context: str = ""
         # Generate response
         response = model.generate_content(full_prompt)
         
+        # Check if response was blocked
+        if not response or not response.text:
+            return {
+                "success": True,
+                "response": "I couldn't generate a response for that question. For medical advice, please consult with a healthcare professional.\n\n📞 Call 1800-XXX-XXXX for support.",
+                "metadata": {
+                    "response_type": "blocked",
+                    "model": "gemini-2.0-flash",
+                    "timestamp": datetime.utcnow().isoformat()
+                }
+            }
+        
         return {
             "success": True,
             "response": response.text,
             "metadata": {
                 "response_type": "ai_generated",
-                "model": "gemini-1.5-flash",
+                "model": "gemini-2.0-flash",
                 "context_used": bool(context),
                 "timestamp": datetime.utcnow().isoformat()
             }
         }
     
     except Exception as e:
+        print(f"Gemini API error: {str(e)}")
         return {
-            "success": False,
-            "response": "I'm having trouble processing your request. Please try again or contact our support team at 1800-XXX-XXXX.",
+            "success": True,
+            "response": "I'm having trouble processing your request. For immediate assistance:\n\n📞 Emergency: Call 108 (India) or 911 (USA)\n📞 24/7 Support: 1800-XXX-XXXX\n\nPlease try again or contact our support team.",
             "metadata": {
-                "response_type": "error",
-                "error": str(e)
+                "response_type": "error_fallback",
+                "error": str(e),
+                "timestamp": datetime.utcnow().isoformat()
             }
         }
 
